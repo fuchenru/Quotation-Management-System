@@ -587,9 +587,14 @@ def display_product_details():
                 }
             elif category == "CMF":
                 # CMF now has minimal specs - only show basic info
+                latest_date = product_data['Quote Date'].max() if 'Quote Date' in product_data.columns else 'N/A'
+                # Convert timestamp to string if it's not 'N/A'
+                if latest_date != 'N/A' and latest_date is not None:
+                    latest_date = latest_date.strftime('%Y-%m-%d')
+                
                 tech_specs = {
                     'Magnias P/N': selected_product,
-                    'Latest Quote Date': product_data['Quote Date'].max() if 'Quote Date' in product_data.columns else 'N/A',
+                    'Latest Quote Date': latest_date,
                 }
             elif category == "Transistor":
                 tech_specs = {
