@@ -25,6 +25,7 @@ if 'data_loaded' not in st.session_state:
     st.session_state.transistor_data = None
     st.session_state.mos_data = None
     st.session_state.last_refresh = None
+    st.session_state.sky_data = None
 
 def authenticate_user(username, password):
     """Authenticate user with credentials from secrets"""
@@ -76,6 +77,7 @@ def logout():
     st.session_state.transistor_data = None
     st.session_state.mos_data = None
     st.session_state.last_refresh = None
+    st.session_state.sky_data = None
     st.rerun()
 
 def load_google_sheet(worksheet_name):
