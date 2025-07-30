@@ -504,7 +504,8 @@ def display_price_lookup():
     
     # Key columns to display
     if category == "MOS":
-        display_columns = ['Magnias P/N', 'Package', 'Type', 'VDS (V)', 'ID (A)',
+        display_columns = ['Magnias P/N', 'Package', 'FG Supplier', 'FG Supplier P/N', 'Wafer Supplier', 'Wafer Supplier P/N',
+                           'Magnias Wafer P/N',
                           'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
     else:
         display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
