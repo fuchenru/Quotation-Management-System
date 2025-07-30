@@ -404,8 +404,8 @@ def display_dashboard():
         st.metric("MOS Products", mos_count)
     
     with col5:
-        mos_count = len(mos_data) if mos_data is not None else 0
-        st.metric("SKY Products", mos_count)
+        sky_count = len(sky_data) if mos_data is not None else 0
+        st.metric("SKY Products", sky_count)
 
     with col6:
         total_count = esd_count + cmf_count + transistor_count + mos_count
@@ -415,13 +415,14 @@ def display_dashboard():
     if any([esd_data is not None and not esd_data.empty, 
             cmf_data is not None and not cmf_data.empty, 
             transistor_data is not None and not transistor_data.empty,
-            mos_data is not None and not mos_data.empty]):
+            mos_data is not None and not mos_data.empty,
+            sky_data is not None and not sky_data.empty,]):
         
         st.subheader("📈 Recent Quotation Activity")
         
         # Combine recent data
         recent_data = []
-        for name, data in [("ESD", esd_data), ("CMF", cmf_data), ("Transistor", transistor_data), ("MOS", mos_data), ("SKY", mos_data)]:
+        for name, data in [("ESD", esd_data), ("CMF", cmf_data), ("Transistor", transistor_data), ("MOS", mos_data), ("SKY", sky_data)]:
             if data is not None and not data.empty and 'Quote Date' in data.columns:
                 data_with_type = data.copy()
                 data_with_type['Product Type'] = name
