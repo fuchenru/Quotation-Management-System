@@ -518,7 +518,7 @@ def display_price_lookup():
     
     # Price recommendations for searched product
     if search_term and not filtered_df.empty:
-        st.subheader("💰 Price Analysis")
+        st.subheader("💰 Latest Quote")
         
         recommendations_rmb = get_price_recommendations(df, search_term, 'Distributor RMB Price')
         recommendations_usd = get_price_recommendations(df, search_term, 'Distributor USD Price')
@@ -526,7 +526,7 @@ def display_price_lookup():
         col1, col2 = st.columns(2)
         
         with col1:
-            st.write("**RMB Price Analysis:**")
+            st.write("**RMB:**")
             if recommendations_rmb:
                 st.write(f"- Historical quotes: {recommendations_rmb['count']}")
                 if recommendations_rmb['latest_date']:
@@ -535,7 +535,7 @@ def display_price_lookup():
                 st.write("No RMB price data available")
         
         with col2:
-            st.write("**USD Price Analysis:**")
+            st.write("**USD:**")
             if recommendations_usd:
                 st.write(f"- Historical quotes: {recommendations_usd['count']}")
                 if recommendations_usd['latest_date']:
