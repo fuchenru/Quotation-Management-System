@@ -23,6 +23,7 @@ if 'data_loaded' not in st.session_state:
     st.session_state.esd_data = None
     st.session_state.cmf_data = None
     st.session_state.transistor_data = None
+    st.session_state.mos_data = None
     st.session_state.last_refresh = None
 
 def authenticate_user(username, password):
@@ -73,6 +74,7 @@ def logout():
     st.session_state.esd_data = None
     st.session_state.cmf_data = None
     st.session_state.transistor_data = None
+    st.session_state.mos_data = None
     st.session_state.last_refresh = None
     st.rerun()
 
@@ -160,6 +162,11 @@ def get_column_names(category):
             'BVCEO(V)(Min.)', 'BVCBO(V)(Min.)', 'BVEBO(V)(Min.)', 'VCE(sat)(V)(Max.)',
             'hFE', 'Distributor RMB Price', 'Distributor USD Price', 'Notes'
         ]
+    elif category == "MOS":
+        return [
+            'Quote Date', 'Magnias P/N', 'Package', 'Type', 'VDS (V)', 'ID (A)', 'FG Supplier', 'FG Supplier P/N',
+            'Distributor RMB Price', 'Distributor USD Price', 'Wafer Supplier', 'Wafer Supplier P/N', 'Magnias Wafer P/N', 'Wafer Price (RMB)'
+        ]
     return []
 
 def display_data_management():
@@ -168,7 +175,7 @@ def display_data_management():
     st.markdown("---")
     
     # Category selection
-    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor"], key="mgmt_category")
+    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor", "MOS"], key="mgmt_category")
     
     # Get cached data
     df = get_cached_data(category)
@@ -197,18 +204,27 @@ def display_add_product_form(category):
         
         # Essential fields in first column
         with col1:
-            form_data['Product Name'] = st.text_input("Product Name*", key="add_product_name")
-            form_data['Package'] = st.text_input("Package", key="add_package")
-            
-            if category in ["ESD", "CMF"]:
-                form_data['POD Type'] = st.text_input("POD Type", key="add_pod_type")
-            elif category == "Transistor":
-                form_data['Polarity'] = st.selectbox("Polarity", ["NPN", "PNP", "N/A"], key="add_polarity")
+            if category == "MOS":
+                form_data['Magnias P/N'] = st.text_input("Magnias P/N*", key="add_magnias_pn")
+                form_data['Package'] = st.text_input("Package", key="add_package")
+                form_data['Type'] = st.selectbox("Type", ["N-Channel", "P-Channel", "Enhancement", "Depletion", "N/A"], key="add_mos_type")
+            else:
+                form_data['Product Name'] = st.text_input("Product Name*", key="add_product_name")
+                form_data['Package'] = st.text_input("Package", key="add_package")
+                
+                if category in ["ESD", "CMF"]:
+                    form_data['POD Type'] = st.text_input("POD Type", key="add_pod_type")
+                elif category == "Transistor":
+                    form_data['Polarity'] = st.selectbox("Polarity", ["NPN", "PNP", "N/A"], key="add_polarity")
         
         with col2:
-            form_data['Wafer Supplier'] = st.text_input("Wafer Supplier", key="add_wafer_supplier")
-            form_data['Wafer Supplier Material Name'] = st.text_input("Wafer Supplier Material Name", key="add_wafer_material")
-            form_data['MPQ'] = st.number_input("MPQ", min_value=0, step=1, key="add_mpq")
+            if category == "MOS":
+                form_data['FG Supplier'] = st.text_input("FG Supplier", key="add_fg_supplier")
+                form_data['FG Supplier P/N'] = st.text_input("FG Supplier P/N", key="add_fg_supplier_pn")
+            else:
+                form_data['Wafer Supplier'] = st.text_input("Wafer Supplier", key="add_wafer_supplier")
+                form_data['Wafer Supplier Material Name'] = st.text_input("Wafer Supplier Material Name", key="add_wafer_material")
+                form_data['MPQ'] = st.number_input("MPQ", min_value=0, step=1, key="add_mpq")
         
         st.markdown("**Technical Specifications**")
         
@@ -258,28 +274,47 @@ def display_add_product_form(category):
                 form_data['VCE(sat)(V)(Max.)'] = st.number_input("VCE(sat)(V)(Max.)", step=0.01, key="add_vce")
             with col3:
                 form_data['hFE'] = st.number_input("hFE", step=1, key="add_hfe")
+                
+        elif category == "MOS":
+            col1, col2 = st.columns(2)
+            with col1:
+                form_data['VDS (V)'] = st.number_input("VDS (V)", step=0.1, key="add_vds")
+            with col2:
+                form_data['ID (A)'] = st.number_input("ID (A)", step=0.1, key="add_id")
         
         st.markdown("**Pricing Information**")
         col1, col2 = st.columns(2)
         with col1:
-            form_data['Finished Product Price (RMB)'] = st.number_input("Finished Product Price (RMB)", step=0.01, key="add_price_rmb")
+            if category != "MOS":
+                form_data['Finished Product Price (RMB)'] = st.number_input("Finished Product Price (RMB)", step=0.01, key="add_price_rmb")
             form_data['Distributor RMB Price'] = st.number_input("Distributor RMB Price", step=0.01, key="add_dist_rmb")
         with col2:
-            form_data['Finished Product Price (USD)'] = st.number_input("Finished Product Price (USD)", step=0.01, key="add_price_usd")
+            if category != "MOS":
+                form_data['Finished Product Price (USD)'] = st.number_input("Finished Product Price (USD)", step=0.01, key="add_price_usd")
             form_data['Distributor USD Price'] = st.number_input("Distributor USD Price", step=0.01, key="add_dist_usd")
         
         # Additional fields
         if category == "ESD":
             form_data['Magnias Wafer P/N'] = st.text_input("Magnias Wafer P/N", key="add_wafer_pn")
             form_data['Wafer Price (RMB)'] = st.number_input("Wafer Price (RMB)", step=0.01, key="add_wafer_price")
+        elif category == "MOS":
+            col1, col2 = st.columns(2)
+            with col1:
+                form_data['Wafer Supplier'] = st.text_input("Wafer Supplier", key="add_mos_wafer_supplier")
+                form_data['Wafer Supplier P/N'] = st.text_input("Wafer Supplier P/N", key="add_mos_wafer_supplier_pn")
+            with col2:
+                form_data['Magnias Wafer P/N'] = st.text_input("Magnias Wafer P/N", key="add_mos_magnias_wafer_pn")
+                form_data['Wafer Price (RMB)'] = st.number_input("Wafer Price (RMB)", step=0.01, key="add_mos_wafer_price")
         
         form_data['Quote Date'] = st.date_input("Quote Date", value=datetime.now().date(), key="add_quote_date")
-        form_data['Notes'] = st.text_area("Notes", key="add_notes")
+        if category != "MOS":
+            form_data['Notes'] = st.text_area("Notes", key="add_notes")
         
         submitted = st.form_submit_button("➕ Add Product", type="primary")
         
         if submitted:
-            if form_data['Product Name']:
+            required_field = 'Magnias P/N' if category == "MOS" else 'Product Name'
+            if form_data[required_field]:
                 # Convert date to string
                 form_data['Quote Date'] = form_data['Quote Date'].strftime('%Y.%m.%d')
                 # Ensure all columns are present with empty values if not filled
@@ -296,7 +331,7 @@ def display_add_product_form(category):
                 else:
                     st.error(message)
             else:
-                st.error("Product Name is required!")
+                st.error(f"{required_field} is required!")
 
 def load_all_data():
     """Load all data from Google Sheets and store in session state"""
@@ -304,6 +339,7 @@ def load_all_data():
         st.session_state.esd_data = load_google_sheet("ESD")
         st.session_state.cmf_data = load_google_sheet("CMF")
         st.session_state.transistor_data = load_google_sheet("Transistor")
+        st.session_state.mos_data = load_google_sheet("MOS")
         st.session_state.data_loaded = True
         st.session_state.last_refresh = datetime.now()
 
@@ -318,6 +354,8 @@ def get_cached_data(category):
         return st.session_state.cmf_data
     elif category == "Transistor":
         return st.session_state.transistor_data
+    elif category == "MOS":
+        return st.session_state.mos_data
     else:
         return None
 
@@ -326,8 +364,11 @@ def get_price_recommendations(df, product_name, price_column):
     if df is None or df.empty:
         return None
     
+    # For MOS category, search by Magnias P/N instead of Product Name
+    search_column = 'Magnias P/N' if 'Magnias P/N' in df.columns else 'Product Name'
+    
     # Filter by product name (case insensitive)
-    product_data = df[df['Product Name'].str.contains(product_name, case=False, na=False)]
+    product_data = df[df[search_column].str.contains(product_name, case=False, na=False)]
     
     if product_data.empty:
         return None
@@ -357,9 +398,10 @@ def display_dashboard():
     esd_data = get_cached_data("ESD")
     cmf_data = get_cached_data("CMF")
     transistor_data = get_cached_data("Transistor")
+    mos_data = get_cached_data("MOS")
     
     # Dashboard metrics
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         esd_count = len(esd_data) if esd_data is not None else 0
@@ -374,19 +416,24 @@ def display_dashboard():
         st.metric("Transistor Products", transistor_count)
     
     with col4:
-        total_count = esd_count + cmf_count + transistor_count
+        mos_count = len(mos_data) if mos_data is not None else 0
+        st.metric("MOS Products", mos_count)
+    
+    with col5:
+        total_count = esd_count + cmf_count + transistor_count + mos_count
         st.metric("Total Products", total_count)
     
     # Recent activity chart
     if any([esd_data is not None and not esd_data.empty, 
             cmf_data is not None and not cmf_data.empty, 
-            transistor_data is not None and not transistor_data.empty]):
+            transistor_data is not None and not transistor_data.empty,
+            mos_data is not None and not mos_data.empty]):
         
         st.subheader("📈 Recent Quotation Activity")
         
         # Combine recent data
         recent_data = []
-        for name, data in [("ESD", esd_data), ("CMF", cmf_data), ("Transistor", transistor_data)]:
+        for name, data in [("ESD", esd_data), ("CMF", cmf_data), ("Transistor", transistor_data), ("MOS", mos_data)]:
             if data is not None and not data.empty and 'Quote Date' in data.columns:
                 data_with_type = data.copy()
                 data_with_type['Product Type'] = name
@@ -412,7 +459,7 @@ def display_price_lookup():
     st.markdown("---")
     
     # Product category selection
-    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor"])
+    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor", "MOS"])
     
     # Get cached data
     df = get_cached_data(category)
@@ -425,7 +472,9 @@ def display_price_lookup():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        search_term = st.text_input("🔍 Search Product Name:", placeholder="Enter product name or part number")
+        search_label = "🔍 Search Magnias P/N:" if category == "MOS" else "🔍 Search Product Name:"
+        search_placeholder = "Enter Magnias P/N" if category == "MOS" else "Enter product name or part number"
+        search_term = st.text_input(search_label, placeholder=search_placeholder)
     
     with col2:
         st.write("")  # Spacing
@@ -433,9 +482,13 @@ def display_price_lookup():
     
     # Filter data based on search
     if search_term and not show_all:
-        # Try to find in Product Name or Product columns
-        product_col = 'Product Name' if 'Product Name' in df.columns else 'Product'
-        filtered_df = df[df[product_col].str.contains(search_term, case=False, na=False)]
+        # Try to find in Product Name or Magnias P/N columns
+        if category == "MOS":
+            search_column = 'Magnias P/N'
+        else:
+            search_column = 'Product Name' if 'Product Name' in df.columns else 'Product'
+        
+        filtered_df = df[df[search_column].str.contains(search_term, case=False, na=False)]
         
         if filtered_df.empty:
             st.warning(f"No products found matching '{search_term}'")
@@ -450,9 +503,14 @@ def display_price_lookup():
     st.subheader(f"📋 {category} Products")
     
     # Key columns to display
-    display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
-                      'Finished Product Price (RMB)', 'Finished Product Price (USD)', 
-                      'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
+    if category == "MOS":
+        display_columns = ['Magnias P/N', 'Package', 'Type', 'VDS (V)', 'ID (A)',
+                          'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
+    else:
+        display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
+                          'Finished Product Price (RMB)', 'Finished Product Price (USD)', 
+                          'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
+    
     display_columns = [col for col in display_columns if col in df.columns]
     
     st.dataframe(filtered_df[display_columns], use_container_width=True)
@@ -461,7 +519,6 @@ def display_price_lookup():
     if search_term and not filtered_df.empty:
         st.subheader("💰 Price Analysis")
         
-        product_col = 'Product Name' if 'Product Name' in df.columns else 'Product'
         recommendations_rmb = get_price_recommendations(df, search_term, 'Distributor RMB Price')
         recommendations_usd = get_price_recommendations(df, search_term, 'Distributor USD Price')
         
@@ -491,7 +548,7 @@ def display_product_details():
     st.markdown("---")
     
     # Category and product selection
-    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor"], key="details_category")
+    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor", "MOS"], key="details_category")
     
     # Get cached data
     df = get_cached_data(category)
@@ -501,10 +558,14 @@ def display_product_details():
         return
     
     # Product selection
-    product_col = 'Product Name' if 'Product Name' in df.columns else 'Product'
-    products = sorted(df[product_col].dropna().unique())
-    
-    selected_product = st.selectbox("Select Product:", products, key="details_product")
+    if category == "MOS":
+        product_col = 'Magnias P/N'
+        products = sorted(df[product_col].dropna().unique())
+        selected_product = st.selectbox("Select Magnias P/N:", products, key="details_product")
+    else:
+        product_col = 'Product Name' if 'Product Name' in df.columns else 'Product'
+        products = sorted(df[product_col].dropna().unique())
+        selected_product = st.selectbox("Select Product:", products, key="details_product")
     
     if selected_product:
         # Filter data for selected product
@@ -558,6 +619,13 @@ def display_product_details():
                     'VCE(sat)(V)(Max.)': product_data['VCE(sat)(V)(Max.)'].iloc[0] if 'VCE(sat)(V)(Max.)' in product_data.columns else 'N/A',
                     'hFE': product_data['hFE'].iloc[0] if 'hFE' in product_data.columns else 'N/A',
                 }
+            elif category == "MOS":
+                tech_specs = {
+                    'Package': product_data['Package'].iloc[0] if 'Package' in product_data.columns else 'N/A',
+                    'Type': product_data['Type'].iloc[0] if 'Type' in product_data.columns else 'N/A',
+                    'VDS (V)': product_data['VDS (V)'].iloc[0] if 'VDS (V)' in product_data.columns else 'N/A',
+                    'ID (A)': product_data['ID (A)'].iloc[0] if 'ID (A)' in product_data.columns else 'N/A',
+                }
             
             # Display specifications in columns
             cols = st.columns(3)
@@ -567,7 +635,6 @@ def display_product_details():
             
             # Wafer supplier information
             st.subheader("📟 Wafer Supplier")
-            # Technical specifications (category-specific)
             wafer_specs = {}
             
             if category == "ESD":
@@ -587,13 +654,19 @@ def display_product_details():
                     'Wafer Supplier': product_data['Wafer Supplier'].iloc[0] if 'Wafer Supplier' in product_data.columns else 'N/A',
                     'Wafer Supplier Material Name': product_data['Wafer Supplier Material Name'].iloc[0] if 'Wafer Supplier Material Name' in product_data.columns else 'N/A',
                 }
+            elif category == "MOS":
+                wafer_specs = {
+                    'Wafer Supplier': product_data['Wafer Supplier'].iloc[0] if 'Wafer Supplier' in product_data.columns else 'N/A',
+                    'Wafer Supplier P/N': product_data['Wafer Supplier P/N'].iloc[0] if 'Wafer Supplier P/N' in product_data.columns else 'N/A',
+                    'Magnias Wafer P/N': product_data['Magnias Wafer P/N'].iloc[0] if 'Magnias Wafer P/N' in product_data.columns else 'N/A',
+                    'Wafer Price (RMB)': product_data['Wafer Price (RMB)'].iloc[0] if 'Wafer Price (RMB)' in product_data.columns else 'N/A',
+                }
             
-            # Display specifications in columns
+            # Display wafer specifications in columns
             cols = st.columns(3)
             for i, (key, value) in enumerate(wafer_specs.items()):
                 with cols[i % 3]:
                     st.metric(key, value)
-
 
             # Distributor information
             st.subheader("🏪 Distributor Information")
@@ -614,20 +687,28 @@ def display_product_details():
                     'Finished product supplier': product_data['Finished product supplier'].iloc[0] if 'Finished product supplier' in product_data.columns else 'N/A',
                     'Finished product material name': product_data['Finished product material name'].iloc[0] if 'Finished product material name' in product_data.columns else 'N/A',
                 }
+            elif category == "MOS":
+                dis_specs = {
+                    'FG Supplier': product_data['FG Supplier'].iloc[0] if 'FG Supplier' in product_data.columns else 'N/A',
+                    'FG Supplier P/N': product_data['FG Supplier P/N'].iloc[0] if 'FG Supplier P/N' in product_data.columns else 'N/A',
+                }
             
-            # Display specifications in columns
+            # Display distributor specifications in columns
             cols = st.columns(3)
             for i, (key, value) in enumerate(dis_specs.items()):
                 with cols[i % 3]:
                     st.metric(key, value)
 
-
             # Quotation history
             st.subheader("📈 Quotation History")
             
             # Display historical data
-            history_columns = ['Quote Date', 'Finished Product Price (RMB)', 'Finished Product Price (USD)', 
-                             'Distributor RMB Price', 'Distributor USD Price', 'MPQ', 'Notes']
+            if category == "MOS":
+                history_columns = ['Quote Date', 'Distributor RMB Price', 'Distributor USD Price']
+            else:
+                history_columns = ['Quote Date', 'Finished Product Price (RMB)', 'Finished Product Price (USD)', 
+                                 'Distributor RMB Price', 'Distributor USD Price', 'MPQ', 'Notes']
+            
             history_columns = [col for col in history_columns if col in product_data.columns]
             
             st.dataframe(product_data[history_columns], use_container_width=True)
@@ -701,6 +782,7 @@ def authenticated_main():
             st.session_state.esd_data = None
             st.session_state.cmf_data = None
             st.session_state.transistor_data = None
+            st.session_state.mos_data = None
             st.session_state.last_refresh = None
             load_all_data()
             st.success("Data force reloaded!")
@@ -715,11 +797,13 @@ def authenticated_main():
             esd_count = len(st.session_state.esd_data) if st.session_state.esd_data is not None else 0
             cmf_count = len(st.session_state.cmf_data) if st.session_state.cmf_data is not None else 0
             transistor_count = len(st.session_state.transistor_data) if st.session_state.transistor_data is not None else 0
+            mos_count = len(st.session_state.mos_data) if st.session_state.mos_data is not None else 0
             
             st.write(f"ESD: {esd_count}")
             st.write(f"CMF: {cmf_count}")
             st.write(f"Transistor: {transistor_count}")
-            st.write(f"**Total: {esd_count + cmf_count + transistor_count}**")
+            st.write(f"MOS: {mos_count}")
+            st.write(f"**Total: {esd_count + cmf_count + transistor_count + mos_count}**")
         else:
             st.write("Loading...")
     
