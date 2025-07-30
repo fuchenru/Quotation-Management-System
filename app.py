@@ -320,7 +320,7 @@ def load_all_data():
         st.session_state.cmf_data = load_google_sheet("CMF")
         st.session_state.transistor_data = load_google_sheet("Transistor")
         st.session_state.mos_data = load_google_sheet("MOS")
-        st.session_state.mos_data = load_google_sheet("SKY")
+        st.session_state.sky_data = load_google_sheet("SKY")
         st.session_state.data_loaded = True
         st.session_state.last_refresh = datetime.now()
 
