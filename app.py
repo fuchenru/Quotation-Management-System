@@ -416,40 +416,42 @@ def display_dashboard():
     zener_data = get_cached_data("Zener")
     ps_data = get_cached_data("PS")
 
-    # Dashboard metrics
-    col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
+    # Create a more responsive layout
+    st.subheader("📊 Product Overview")
 
+    # First row - main product types
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         esd_count = len(esd_data) if esd_data is not None else 0
         st.metric("ESD Products", esd_count)
-    
     with col2:
         cmf_count = len(cmf_data) if cmf_data is not None else 0
         st.metric("CMF Products", cmf_count)
-    
     with col3:
         transistor_count = len(transistor_data) if transistor_data is not None else 0
         st.metric("Transistor Products", transistor_count)
-    
     with col4:
         mos_count = len(mos_data) if mos_data is not None else 0
         st.metric("MOS Products", mos_count)
-    
+
+    # Second row - additional product types
+    col5, col6, col7 = st.columns(3)
     with col5:
         sky_count = len(sky_data) if sky_data is not None else 0
         st.metric("SKY Products", sky_count)
-
     with col6:
         zener_count = len(zener_data) if zener_data is not None else 0
         st.metric("Zener Products", zener_count)
-
     with col7:
         ps_count = len(ps_data) if ps_data is not None else 0
         st.metric("PS Products", ps_count)
 
-    with col8:
+    # Highlight total in its own section
+    st.markdown("---")
+    total_col1, total_col2, total_col3 = st.columns([1, 1, 1])
+    with total_col2:  # Center the total
         total_count = esd_count + cmf_count + transistor_count + mos_count + sky_count + zener_count + ps_count
-        st.metric("Total Products", total_count)
+        st.metric("🎯 Total Products", total_count)
     
     # Recent activity chart
     if any([esd_data is not None and not esd_data.empty, 
