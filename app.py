@@ -528,9 +528,9 @@ def display_price_lookup():
     if search_term and not filtered_df.empty:
         st.subheader("💰 Latest Quote")
         
-        recommendations_rmb = get_price_recommendations(df, search_term, 'Distributor RMB Price')
-        recommendations_usd = get_price_recommendations(df, search_term, 'Distributor USD Price')
-        
+        recommendations_rmb = get_price_recommendations(df, search_term, 'Parts RMB Price')
+        recommendations_usd = get_price_recommendations(df, search_term, 'Parts USD Price')
+
         col1, col2 = st.columns(2)
         
         with col1:
