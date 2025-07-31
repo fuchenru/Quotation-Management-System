@@ -99,8 +99,8 @@ def logout():
     st.session_state.ps_data = None
     st.rerun()
 
-def load_google_sheet(worksheet_name):
-    """Load data from specific Google Sheets worksheet"""
+def load_google_sheet_debug(worksheet_name):
+    """Load data from specific Google Sheets worksheet with debugging for Quote Date"""
     try:
         # Use Streamlit secrets instead of connections.toml
         creds_info = st.secrets["connections"]["gsheets"]
@@ -118,11 +118,64 @@ def load_google_sheet(worksheet_name):
         
         if data:
             df = pd.DataFrame(data)
-            # Convert Quote Date to datetime with flexible parsing for both formats
+            
+            # DEBUG: Print Quote Date column info before conversion
             if 'Quote Date' in df.columns:
-                # Handle both 'YYYY.MM.DD' and 'YYYY-MM-DD' formats
-                df['Quote Date'] = df['Quote Date'].apply(lambda x: 
-                    pd.to_datetime(str(x).replace('.', '-'), errors='coerce') if x else None)
+                print(f"\n=== DEBUG INFO for {worksheet_name} ===")
+                print(f"Quote Date column type: {df['Quote Date'].dtype}")
+                print(f"Sample Quote Date values (first 5):")
+                print(df['Quote Date'].head().tolist())
+                print(f"Unique Quote Date values (first 10):")
+                print(df['Quote Date'].unique()[:10].tolist())
+                print(f"Any null values: {df['Quote Date'].isnull().sum()}")
+                
+                # Try to identify the date format
+                sample_dates = df['Quote Date'].dropna().astype(str).head(10).tolist()
+                print(f"Sample dates as strings: {sample_dates}")
+                
+                # Convert Quote Date to datetime with enhanced error handling
+                def convert_date(x):
+                    if pd.isna(x) or x == '' or x == 'None':
+                        return None
+                    
+                    date_str = str(x).strip()
+                    
+                    # Try different date formats
+                    formats_to_try = [
+                        '%Y.%m.%d',    # 2023.12.31
+                        '%Y-%m-%d',    # 2023-12-31
+                        '%m/%d/%Y',    # 12/31/2023
+                        '%d/%m/%Y',    # 31/12/2023
+                        '%Y/%m/%d',    # 2023/12/31
+                        '%d.%m.%Y',    # 31.12.2023
+                        '%m-%d-%Y',    # 12-31-2023
+                        '%d-%m-%Y',    # 31-12-2023
+                    ]
+                    
+                    for fmt in formats_to_try:
+                        try:
+                            return pd.to_datetime(date_str, format=fmt)
+                        except ValueError:
+                            continue
+                    
+                    # If none of the specific formats work, try pandas' general parser
+                    try:
+                        return pd.to_datetime(date_str, errors='coerce')
+                    except:
+                        return None
+                
+                # Apply the enhanced conversion
+                df['Quote Date'] = df['Quote Date'].apply(convert_date)
+                
+                # DEBUG: Print conversion results
+                print(f"After conversion:")
+                print(f"Quote Date column type: {df['Quote Date'].dtype}")
+                print(f"Successfully converted dates: {df['Quote Date'].notna().sum()}")
+                print(f"Failed conversions (NaT): {df['Quote Date'].isna().sum()}")
+                print(f"Sample converted dates:")
+                print(df['Quote Date'].dropna().head().tolist())
+                print("=== END DEBUG INFO ===\n")
+            
             return df
         else:
             return pd.DataFrame()
@@ -517,7 +570,7 @@ def display_price_lookup():
     # Filter data based on search
     if search_term and not show_all:
         # Try to find in Product Name or Magnias P/N columns
-        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  # Added Transistor
+        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  
             search_column = 'Magnias P/N'
         else:
             search_column = 'Product Name' if 'Product Name' in df.columns else 'Product'
