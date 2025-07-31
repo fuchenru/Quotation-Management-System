@@ -99,7 +99,7 @@ def logout():
     st.session_state.ps_data = None
     st.rerun()
 
-def load_google_sheet_debug(worksheet_name):
+def load_google_sheet(worksheet_name):
     """Load data from specific Google Sheets worksheet with debugging for Quote Date"""
     try:
         # Use Streamlit secrets instead of connections.toml
