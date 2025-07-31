@@ -100,7 +100,7 @@ def logout():
     st.rerun()
 
 def load_google_sheet(worksheet_name):
-    """Load data from specific Google Sheets worksheet with debugging for Quote Date"""
+    """Load data from specific Google Sheets worksheet with proper invalid date handling"""
     try:
         # Use Streamlit secrets instead of connections.toml
         creds_info = st.secrets["connections"]["gsheets"]
@@ -119,63 +119,69 @@ def load_google_sheet(worksheet_name):
         if data:
             df = pd.DataFrame(data)
             
-            # DEBUG: Print Quote Date column info before conversion
+            # Convert Quote Date to datetime with validation for invalid dates
             if 'Quote Date' in df.columns:
-                print(f"\n=== DEBUG INFO for {worksheet_name} ===")
-                print(f"Quote Date column type: {df['Quote Date'].dtype}")
-                print(f"Sample Quote Date values (first 5):")
-                print(df['Quote Date'].head().tolist())
-                print(f"Unique Quote Date values (first 10):")
-                print(df['Quote Date'].unique()[:10].tolist())
-                print(f"Any null values: {df['Quote Date'].isnull().sum()}")
-                
-                # Try to identify the date format
-                sample_dates = df['Quote Date'].dropna().astype(str).head(10).tolist()
-                print(f"Sample dates as strings: {sample_dates}")
-                
-                # Convert Quote Date to datetime with enhanced error handling
-                def convert_date(x):
-                    if pd.isna(x) or x == '' or x == 'None':
+                def safe_date_convert(date_str):
+                    """Safely convert date string to datetime, handling invalid dates"""
+                    if pd.isna(date_str) or date_str == '' or str(date_str).strip() == '':
                         return None
                     
-                    date_str = str(x).strip()
+                    date_str = str(date_str).strip()
                     
-                    # Try different date formats
-                    formats_to_try = [
-                        '%Y.%m.%d',    # 2023.12.31
-                        '%Y-%m-%d',    # 2023-12-31
-                        '%m/%d/%Y',    # 12/31/2023
-                        '%d/%m/%Y',    # 31/12/2023
-                        '%Y/%m/%d',    # 2023/12/31
-                        '%d.%m.%Y',    # 31.12.2023
-                        '%m-%d-%Y',    # 12-31-2023
-                        '%d-%m-%Y',    # 31-12-2023
-                    ]
-                    
-                    for fmt in formats_to_try:
+                    # Check if it's in YYYY.MM.DD format
+                    if '.' in date_str:
                         try:
-                            return pd.to_datetime(date_str, format=fmt)
-                        except ValueError:
-                            continue
+                            parts = date_str.split('.')
+                            if len(parts) == 3:
+                                year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
+                                
+                                # Validate the date components
+                                if year < 1900 or year > 2100:
+                                    print(f"Warning: Invalid year in date {date_str}")
+                                    return None
+                                if month < 1 or month > 12:
+                                    print(f"Warning: Invalid month in date {date_str}")
+                                    return None
+                                if day < 1 or day > 31:
+                                    print(f"Warning: Invalid day in date {date_str}")
+                                    return None
+                                
+                                # Check for month-specific day limits
+                                if month in [4, 6, 9, 11] and day > 30:
+                                    print(f"Warning: Invalid day {day} for month {month} in date {date_str}")
+                                    return None
+                                if month == 2:
+                                    # Check for leap year
+                                    is_leap = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+                                    max_feb_day = 29 if is_leap else 28
+                                    if day > max_feb_day:
+                                        print(f"Warning: Invalid day {day} for February {year} in date {date_str}")
+                                        return None
+                                
+                                # If we get here, the date is valid
+                                return pd.to_datetime(f"{year}-{month:02d}-{day:02d}")
+                                
+                        except (ValueError, IndexError) as e:
+                            print(f"Warning: Could not parse date {date_str}: {e}")
+                            return None
                     
-                    # If none of the specific formats work, try pandas' general parser
+                    # Try other formats if not YYYY.MM.DD
                     try:
-                        return pd.to_datetime(date_str, errors='coerce')
+                        # Replace dots with dashes and try standard conversion
+                        normalized_date = date_str.replace('.', '-')
+                        return pd.to_datetime(normalized_date, errors='coerce')
                     except:
+                        print(f"Warning: Could not convert date {date_str}")
                         return None
                 
-                # Apply the enhanced conversion
-                df['Quote Date'] = df['Quote Date'].apply(convert_date)
+                # Apply the safe conversion
+                df['Quote Date'] = df['Quote Date'].apply(safe_date_convert)
                 
-                # DEBUG: Print conversion results
-                print(f"After conversion:")
-                print(f"Quote Date column type: {df['Quote Date'].dtype}")
-                print(f"Successfully converted dates: {df['Quote Date'].notna().sum()}")
-                print(f"Failed conversions (NaT): {df['Quote Date'].isna().sum()}")
-                print(f"Sample converted dates:")
-                print(df['Quote Date'].dropna().head().tolist())
-                print("=== END DEBUG INFO ===\n")
-            
+                # Report conversion results
+                valid_dates = df['Quote Date'].notna().sum()
+                total_dates = len(df)
+                print(f"Date conversion for {worksheet_name}: {valid_dates}/{total_dates} valid dates")
+                
             return df
         else:
             return pd.DataFrame()
@@ -183,6 +189,7 @@ def load_google_sheet(worksheet_name):
     except Exception as e:
         st.error(f"Error loading {worksheet_name} sheet: {str(e)}")
         return None
+
 
 def update_google_sheet(worksheet_name, data_dict, row_index=None):
     """Update Google Sheets with new/modified data"""
