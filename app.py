@@ -18,6 +18,9 @@ st.set_page_config(
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 
+if 'username' not in st.session_state:
+    st.session_state.username = None
+
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
     st.session_state.esd_data = None
@@ -34,7 +37,11 @@ def authenticate_user(username, password):
         auth_username = st.secrets["auth"]["username"]
         auth_password = st.secrets["auth"]["password"]
         
-        return username == auth_username and password == auth_password
+        if username == auth_username and password == auth_password:
+            # Store the username in session state
+            st.session_state.username = username
+            return True
+        return False
     except KeyError:
         st.error("Authentication credentials not configured in secrets. Please check your secrets.toml file.")
         return False
@@ -68,9 +75,11 @@ def login_page():
                     st.warning("⚠️ Please enter both username and password")
         
 
+
 def logout():
     """Logout function"""
     st.session_state.authenticated = False
+    st.session_state.username = None  # Clear username on logout
     st.session_state.data_loaded = False
     st.session_state.esd_data = None
     st.session_state.cmf_data = None
@@ -736,14 +745,29 @@ def authenticated_main():
         st.sidebar.image("https://i.postimg.cc/j5G8ytbC/cropped-logo.png")
         st.header("Navigation")
         
+        # Show current user
+        if st.session_state.username:
+            st.info(f"👤 Logged in as: {st.session_state.username}")
+        
         # Add logout button at the top
         if st.button("🚪 Logout", type="secondary", use_container_width=True):
             logout()
         
         st.markdown("---")
         
-        page = st.radio("Select Page:", 
-                       ["Dashboard", "Price Lookup", "Product Details", "Data Management"])
+        # Create navigation options based on user role
+        nav_options = ["Dashboard", "Price Lookup", "Product Details"]
+        
+        # Only add Data Management for admin users
+        if st.session_state.username == "admin":
+            nav_options.append("Data Management")
+        
+        page = st.radio("Select Page:", nav_options)
+        
+        # Show a message if user is not admin and tries to access data management features
+        if st.session_state.username != "admin":
+            st.markdown("---")
+            st.info("💡 **Note:** Data Management is only available for admin users")
         
         st.markdown("---")
         
@@ -804,8 +828,13 @@ def authenticated_main():
         display_price_lookup()
     elif page == "Product Details":
         display_product_details()
-    elif page == "Data Management":  
-        display_data_management()
+    elif page == "Data Management":
+        # Double-check admin access before showing data management
+        if st.session_state.username == "admin":
+            display_data_management()
+        else:
+            st.error("🚫 Access Denied: Data Management is only available for admin users")
+            st.info("Please contact your administrator if you need access to this feature.")
 
 def main():
     """Main application function with authentication check"""
