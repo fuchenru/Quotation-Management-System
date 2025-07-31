@@ -167,20 +167,20 @@ def get_column_names(category):
         ]
     elif category == "CMF":
         return [
-            'Quote Date', 'Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Distributor RMB Price', 'Distributor USD Price', 'Notes'
+            'Quote Date', 'Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Notes'
         ]
     elif category == "Transistor":
         return [
-            'Quote Date', 'Magnias P/N', 'Package', 'FG Supplier', 'FG Supplier P/N', 'Distributor RMB Price', 'Distributor USD Price', 'Polarity', 'Notes'
+            'Quote Date', 'Magnias P/N', 'Package', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Polarity', 'Notes'
         ]
     elif category == "MOS":
         return [
             'Quote Date', 'Magnias P/N', 'Package', 'Type', 'VDS (V)', 'ID (A)', 'FG Supplier', 'FG Supplier P/N',
-            'Distributor RMB Price', 'Distributor USD Price', 'Wafer Supplier', 'Wafer Supplier P/N', 'Magnias Wafer P/N', 'Wafer Price (RMB)'
+            'Parts RMB Price', 'Parts USD Price', 'Wafer Supplier', 'Wafer Supplier P/N', 'Magnias Wafer P/N', 'Wafer Price (RMB)'
         ]
     elif category == "SKY":
         return [
-            'Quote Date', 'Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Distributor RMB Price', 'Distributor USD Price', 'Notes', 'IF (mA)',
+            'Quote Date', 'Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Notes', 'IF (mA)',
             'IFSM (A)',	'VRRM (V)',	'Vf @ If= 1mA'
         ]
     return []
@@ -281,9 +281,7 @@ def display_add_product_form(category):
         st.markdown("**Pricing Information**")
         col1, col2 = st.columns(2)
         with col1:
-            if category not in ["MOS", "CMF", "Transistor", "SKY"]:  # Added Transistor here
-                form_data['Finished Product Price (RMB)'] = st.number_input("Finished Product Price (RMB)", step=0.01, key="add_price_rmb")
-            form_data['Distributor RMB Price'] = st.number_input("Distributor RMB Price", step=0.01, key="add_dist_rmb")
+            form_data['Parts RMB Price'] = st.number_input("Parts RMB Price", step=0.01, key="add_parts_rmb")
         with col2:
             if category not in ["MOS", "CMF", "Transistor", "SKY"]:  # Added Transistor here
                 form_data['Finished Product Price (USD)'] = st.number_input("Finished Product Price (USD)", step=0.01, key="add_price_usd")
@@ -510,13 +508,13 @@ def display_price_lookup():
     if category in ["MOS", "CMF", "Transistor", "SKY"]:  # Added Transistor
         if category == "MOS":
             display_columns = ['Magnias P/N', 'Package', 'FG Supplier', 'FG Supplier P/N', 'Wafer Supplier', 'Wafer Supplier P/N',
-                              'Magnias Wafer P/N', 'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
+                              'Magnias Wafer P/N', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
         elif category == "Transistor":
-            display_columns = ['Magnias P/N', 'Package', 'FG Supplier', 'FG Supplier P/N', 'Polarity', 'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
+            display_columns = ['Magnias P/N', 'Package', 'FG Supplier', 'FG Supplier P/N', 'Polarity', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
         elif category == "CMF":  # CMF
-            display_columns = ['Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
+            display_columns = ['Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
         else:
-            display_columns = ['Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
+            display_columns = ['Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
     else:
         display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
                           'Finished Product Price (RMB)', 'Finished Product Price (USD)', 
@@ -703,7 +701,7 @@ def display_product_details():
             
             # Display historical data
             if category in ["MOS", "CMF", "Transistor", "SKY"]:  # Added Transistor
-                history_columns = ['Quote Date', 'Distributor RMB Price', 'Distributor USD Price', 'Notes']
+                history_columns = ['Quote Date', 'Parts RMB Price', 'Parts USD Price', 'Notes']
             else:
                 history_columns = ['Quote Date', 'Finished Product Price (RMB)', 'Finished Product Price (USD)', 
                                  'Distributor RMB Price', 'Distributor USD Price', 'MPQ', 'Notes']
