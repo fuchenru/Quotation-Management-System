@@ -159,7 +159,7 @@ def get_column_names(category):
     if category == "ESD":
         return [
             'Wafer Supplier', 'Wafer Supplier Material Name', 'Magnias Wafer P/N', 'Wafer Price (RMB)',
-            'Finished product supplier', 'Finished Product Supplier Material Name', 'Finished Product Price (RMB)', 'Finished Product Price (USD)',
+            'Finished product supplier', 'Finished Product Supplier Material Name', 'Parts RMB Price', 'Parts USD Price',
             'Quote Date', 'Product Name', 'Package', 'POD Type', 'VrwmMAX(V)', 'VBR MIN(V)',
             'CJTYP(pF)', 'CJMAX(pF)', 'CH', 'Direction', 'ESDC(kV)', 'ESDA(kV)',
             'Ipp8/20,2Ω(A)', 'Ppk(W)', 'VCTYP (V)', 'MPQ',
@@ -283,9 +283,8 @@ def display_add_product_form(category):
         with col1:
             form_data['Parts RMB Price'] = st.number_input("Parts RMB Price", step=0.01, key="add_parts_rmb")
         with col2:
-            if category not in ["MOS", "CMF", "Transistor", "SKY"]:  # Added Transistor here
-                form_data['Finished Product Price (USD)'] = st.number_input("Finished Product Price (USD)", step=0.01, key="add_price_usd")
-            form_data['Distributor USD Price'] = st.number_input("Distributor USD Price", step=0.01, key="add_dist_usd")
+            form_data['Parts USD Price'] = st.number_input("Parts USD Price", step=0.01, key="add_parts_usd")
+
         
         # Additional fields - only for ESD and MOS
         if category == "ESD":
@@ -517,7 +516,7 @@ def display_price_lookup():
             display_columns = ['Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
     else:
         display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
-                          'Finished Product Price (RMB)', 'Finished Product Price (USD)', 
+                          'Parts RMB Price', 'Parts USD Price', 
                           'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
     
     display_columns = [col for col in display_columns if col in df.columns]
@@ -703,7 +702,7 @@ def display_product_details():
             if category in ["MOS", "CMF", "Transistor", "SKY"]:  # Added Transistor
                 history_columns = ['Quote Date', 'Parts RMB Price', 'Parts USD Price', 'Notes']
             else:
-                history_columns = ['Quote Date', 'Finished Product Price (RMB)', 'Finished Product Price (USD)', 
+                history_columns = ['Quote Date', 'Parts RMB Price', 'Parts USD Price', 
                                  'Distributor RMB Price', 'Distributor USD Price', 'MPQ', 'Notes']
             
             history_columns = [col for col in history_columns if col in product_data.columns]
@@ -717,8 +716,8 @@ def display_product_details():
                 fig = make_subplots(specs=[[{"secondary_y": True}]])
                 
                 # RMB prices
-                if 'Distributor RMB Price' in product_data.columns:
-                    rmb_prices = pd.to_numeric(product_data_sorted['Distributor RMB Price'], errors='coerce')
+                if 'Parts RMB Price' in product_data.columns:
+                    rmb_prices = pd.to_numeric(product_data_sorted['Parts RMB Price'], errors='coerce')
                     fig.add_trace(
                         go.Scatter(x=product_data_sorted['Quote Date'], y=rmb_prices, 
                                   name="RMB Price", line=dict(color="blue")),
@@ -726,8 +725,8 @@ def display_product_details():
                     )
                 
                 # USD prices
-                if 'Distributor USD Price' in product_data.columns:
-                    usd_prices = pd.to_numeric(product_data_sorted['Distributor USD Price'], errors='coerce')
+                if 'Parts USD Price' in product_data.columns:
+                    usd_prices = pd.to_numeric(product_data_sorted['Parts USD Price'], errors='coerce')
                     fig.add_trace(
                         go.Scatter(x=product_data_sorted['Quote Date'], y=usd_prices, 
                                   name="USD Price", line=dict(color="red")),
@@ -737,7 +736,7 @@ def display_product_details():
                 fig.update_xaxes(title_text="Date")
                 fig.update_yaxes(title_text="Price (RMB)", secondary_y=False)
                 fig.update_yaxes(title_text="Price (USD)", secondary_y=True)
-                fig.update_layout(title_text=f"{selected_product} - Distributor Price Trend")
+                fig.update_layout(title_text=f"{selected_product} - Parts Price Trend")
                 
                 st.plotly_chart(fig, use_container_width=True)
 
