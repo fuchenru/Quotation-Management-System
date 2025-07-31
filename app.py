@@ -33,17 +33,23 @@ if 'data_loaded' not in st.session_state:
 def authenticate_user(username, password):
     """Authenticate user with credentials from secrets"""
     try:
-        # Get credentials from secrets
-        auth_username = st.secrets["auth"]["username"]
-        auth_password = st.secrets["auth"]["password"]
+        # Get all auth sections from secrets
+        auth_config = st.secrets["auth"]
         
-        if username == auth_username and password == auth_password:
-            # Store the username in session state
-            st.session_state.username = username
-            return True
+        # Check each user in the auth config
+        for user_key, user_config in auth_config.items():
+            if user_config["username"] == username and user_config["password"] == password:
+                # Store the username in session state
+                st.session_state.username = username
+                return True
+        
         return False
-    except KeyError:
-        st.error("Authentication credentials not configured in secrets. Please check your secrets.toml file.")
+        
+    except KeyError as e:
+        st.error(f"Authentication credentials not configured in secrets: {str(e)}")
+        return False
+    except Exception as e:
+        st.error(f"Authentication error: {str(e)}")
         return False
 
 def login_page():
