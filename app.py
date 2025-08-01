@@ -400,7 +400,8 @@ def get_latest_quotes(product_category, product_name):
         ]
         
         for _, row in usd_quotes.iterrows():
-            for i in range(1, 10):  # DC-1 to DC-4
+            # Changed range to ensure DC-1, DC-2, DC-3, DC-4 are all processed
+            for i in range(1, 5):  # DC-1 to DC-4 only
                 dc_col = f'DC-{i}'
                 customer_col = f'End Customer {i}'
                 date_col = f'Quote Date {i}'
@@ -408,12 +409,16 @@ def get_latest_quotes(product_category, product_name):
                 if (dc_col in row and customer_col in row and date_col in row and 
                     pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
                     
+                    # Debug print to check what columns are being processed
+                    print(f"Processing USD {dc_col}: {row[dc_col]}, Customer: {row[customer_col]}, Date: {row[date_col]}")
+                    
                     quotes.append({
                         'Currency': 'USD',
                         'Price': row[dc_col],
                         'Customer': row[customer_col],
                         'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
-                        'Raw_Date': row[date_col]
+                        'Raw_Date': row[date_col],
+                        'DC_Column': dc_col  # Added for debugging
                     })
     
     # Process RMB quotes
@@ -424,7 +429,8 @@ def get_latest_quotes(product_category, product_name):
         ]
         
         for _, row in rmb_quotes.iterrows():
-            for i in range(1, 10):  # DC-1 to DC-4
+            # Changed range to ensure DC-1, DC-2, DC-3, DC-4 are all processed
+            for i in range(1, 5):  # DC-1 to DC-4 only
                 dc_col = f'DC-{i}'
                 customer_col = f'End Customer {i}'
                 date_col = f'Quote Date {i}'
@@ -432,12 +438,16 @@ def get_latest_quotes(product_category, product_name):
                 if (dc_col in row and customer_col in row and date_col in row and 
                     pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
                     
+                    # Debug print to check what columns are being processed
+                    print(f"Processing RMB {dc_col}: {row[dc_col]}, Customer: {row[customer_col]}, Date: {row[date_col]}")
+                    
                     quotes.append({
                         'Currency': 'RMB',
                         'Price': row[dc_col],
                         'Customer': row[customer_col],
                         'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
-                        'Raw_Date': row[date_col]
+                        'Raw_Date': row[date_col],
+                        'DC_Column': dc_col  # Added for debugging
                     })
     
     # Sort by date descending (most recent first)
