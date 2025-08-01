@@ -537,50 +537,76 @@ def display_price_lookup():
     st.title("🔍 Price Lookup & Recommendations")
     st.markdown("---")
     
-    # Product category selection
-    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS"])
+    # Product category selection - Add "All Products" as first option
+    category = st.selectbox("Select Product Category:", ["All Products", "ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS"])
 
-    # Get cached data
-    df = get_cached_data(category)
+    # Get cached data - handle "All Products" selection
+    if category == "All Products":
+        # Combine all product data
+        all_dfs = []
+        for cat in ["ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS"]:
+            cat_df = get_cached_data(cat)
+            if cat_df is not None and not cat_df.empty:
+                cat_df_copy = cat_df.copy()
+                cat_df_copy['Category'] = cat  # Add category column
+                all_dfs.append(cat_df_copy)
+        
+        if all_dfs:
+            df = pd.concat(all_dfs, ignore_index=True, sort=False)
+        else:
+            df = pd.DataFrame()
+    else:
+        df = get_cached_data(category)
     
     if df is None or df.empty:
-        st.warning(f"No data available for {category} category")
+        st.warning(f"No data available for {category}")
         return
     
     # Search functionality
-    search_label = "🔍 Search Magnias P/N:" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "🔍 Search Product Name:"  
-    search_placeholder = "Enter Magnias P/N" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "Enter product name or part number"  
+    if category == "All Products":
+        search_label = "🔍 Search Product Name/Magnias P/N:"
+        search_placeholder = "Enter product name or part number"
+    else:
+        search_label = "🔍 Search Magnias P/N:" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "🔍 Search Product Name:"  
+        search_placeholder = "Enter Magnias P/N" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "Enter product name or part number"
+    
     search_term = st.text_input(search_label, placeholder=search_placeholder)
     
     # Filter data based on search
     if search_term:
-        # Try to find in Product Name or Magnias P/N columns
-        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  
-            search_column = 'Magnias P/N'
+        if category == "All Products":
+            # Search in both Product Name and Magnias P/N columns
+            mask = pd.Series([False] * len(df))
+            if 'Product Name' in df.columns:
+                mask |= df['Product Name'].str.contains(search_term, case=False, na=False)
+            if 'Magnias P/N' in df.columns:
+                mask |= df['Magnias P/N'].str.contains(search_term, case=False, na=False)
+            filtered_df = df[mask]
         else:
-            search_column = 'Product Name' if 'Product Name' in df.columns else 'Product'
-        
-        filtered_df = df[df[search_column].str.contains(search_term, case=False, na=False)]
+            # Try to find in Product Name or Magnias P/N columns
+            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  
+                search_column = 'Magnias P/N'
+            else:
+                search_column = 'Product Name' if 'Product Name' in df.columns else 'Product'
+            
+            filtered_df = df[df[search_column].str.contains(search_term, case=False, na=False)]
     else:
         filtered_df = df
     
     # Display results
-    st.subheader(f"📋 {category} Products")
+    st.subheader(f"📋 {category}")
     
     # Key columns to display
-    if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  # Added Transistor
-        if category == "MOS":
-            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
-        elif category == "Transistor":
-            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
-        elif category == "CMF":  # CMF
-            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
-        elif category == "Zener":  # Zener
-            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
-        elif category == "PS":  # PS
-            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
-        else:
-            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
+    if category == "All Products":
+        # Show category, product identifier, and prices
+        display_columns = ['Category']
+        if 'Product Name' in df.columns:
+            display_columns.append('Product Name')
+        if 'Magnias P/N' in df.columns:
+            display_columns.append('Magnias P/N')
+        display_columns.extend(['Parts RMB Price', 'Parts USD Price', 'Quote Date'])
+    elif category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
+        display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
     else:
         display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
                           'Parts RMB Price', 'Parts USD Price', 'Quote Date']
@@ -589,8 +615,8 @@ def display_price_lookup():
     
     st.dataframe(filtered_df[display_columns], use_container_width=True)
     
-    # Add Latest Quotes section - only show if there's a search term
-    if search_term:
+    # Add Latest Quotes section - only show if there's a search term and not "All Products"
+    if search_term and category != "All Products":
         st.markdown("---")
         st.subheader("💰 Latest Quotes")
         
@@ -611,21 +637,24 @@ def display_price_lookup():
         if quotes:
             st.success(f"Found {len(quotes)} quotes for {category} - {product_name_for_quotes}")
             
-            # Display quotes in a nice format
+            # Display quotes in a table format instead of expanders
+            quote_data = []
             for i, quote in enumerate(quotes, 1):
-                with st.expander(f"Quote #{i} - {quote['Currency']} {quote['Price']} ({quote['Raw_Date']})"):
-                    col1, col2, col3, col4 = st.columns(4)
-                    with col1:
-                        st.write(f"**Currency:** {quote['Currency']}")
-                    with col2:
-                        st.write(f"**Price:** {quote['Price']}")
-                    with col3:
-                        st.write(f"**Customer:** {quote['Customer']}")
-                    with col4:
-                        st.write(f"**Date:** {quote['Raw_Date']}")
-                    st.write(f"**Distributor:** {quote['Distributor']}")
+                quote_data.append({
+                    'Quote #': i,
+                    'Currency': quote['Currency'],
+                    'Price': quote['Price'],
+                    'Customer': quote['Customer'],
+                    'Date': quote['Raw_Date'],
+                    'Distributor': quote['Distributor']
+                })
+            
+            quote_df = pd.DataFrame(quote_data)
+            st.dataframe(quote_df, use_container_width=True)
         else:
             st.info(f"No quotes found for {category} - {product_name_for_quotes}")
+    elif search_term and category == "All Products":
+        st.info("💡 Latest Quotes are only available when searching within a specific product category.")
 
 
 def display_product_details():
