@@ -548,19 +548,12 @@ def display_price_lookup():
         return
     
     # Search functionality
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        search_label = "🔍 Search Magnias P/N:" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "🔍 Search Product Name:"  
-        search_placeholder = "Enter Magnias P/N" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "Enter product name or part number"  
-        search_term = st.text_input(search_label, placeholder=search_placeholder)
-    
-    with col2:
-        st.write("")  # Spacing
-        show_all = st.checkbox("Show All Products", value=False)
+    search_label = "🔍 Search Magnias P/N:" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "🔍 Search Product Name:"  
+    search_placeholder = "Enter Magnias P/N" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "Enter product name or part number"  
+    search_term = st.text_input(search_label, placeholder=search_placeholder)
     
     # Filter data based on search
-    if search_term and not show_all:
+    if search_term:
         # Try to find in Product Name or Magnias P/N columns
         if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  
             search_column = 'Magnias P/N'
@@ -568,15 +561,8 @@ def display_price_lookup():
             search_column = 'Product Name' if 'Product Name' in df.columns else 'Product'
         
         filtered_df = df[df[search_column].str.contains(search_term, case=False, na=False)]
-        
-        if filtered_df.empty:
-            st.warning(f"No products found matching '{search_term}'")
-            return
-    elif show_all:
-        filtered_df = df
     else:
-        st.info("Enter a search term or check 'Show All Products' to view data")
-        return
+        filtered_df = df
     
     # Display results
     st.subheader(f"📋 {category} Products")
@@ -603,8 +589,8 @@ def display_price_lookup():
     
     st.dataframe(filtered_df[display_columns], use_container_width=True)
     
-    # Add Latest Quotes section
-    if search_term and not show_all:
+    # Add Latest Quotes section - only show if there's a search term
+    if search_term:
         st.markdown("---")
         st.subheader("💰 Latest Quotes")
         
