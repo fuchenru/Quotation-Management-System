@@ -648,40 +648,6 @@ def display_dashboard():
     
     else:
         st.info("No quotes data available for analysis")
-    
-    # Original Recent activity chart for product data
-    if any([esd_data is not None and not esd_data.empty, 
-            cmf_data is not None and not cmf_data.empty, 
-            transistor_data is not None and not transistor_data.empty,
-            mos_data is not None and not mos_data.empty,
-            sky_data is not None and not sky_data.empty,
-            zener_data is not None and not zener_data.empty,
-            ps_data is not None and not ps_data.empty]):
-        
-        st.markdown("---")
-        st.subheader("📊 Product Data Activity")
-        
-        # Combine recent data
-        recent_data = []
-        for name, data in [("ESD", esd_data), ("CMF", cmf_data), ("Transistor", transistor_data), ("MOS", mos_data), ("SKY", sky_data), ("Zener", zener_data), ("PS", ps_data)]:
-            if data is not None and not data.empty and 'Quote Date' in data.columns:
-                data_with_type = data.copy()
-                data_with_type['Product Type'] = name
-                recent_data.append(data_with_type[['Quote Date', 'Product Type']])
-        
-        if recent_data:
-            combined_data = pd.concat(recent_data, ignore_index=True)
-            combined_data['Quote Date'] = pd.to_datetime(combined_data['Quote Date'], errors='coerce')
-            combined_data = combined_data.dropna(subset=['Quote Date'])
-            
-            if not combined_data.empty:
-                # Group by date and product type
-                daily_counts = combined_data.groupby([combined_data['Quote Date'].dt.date, 'Product Type']).size().reset_index(name='Count')
-                daily_counts['Quote Date'] = pd.to_datetime(daily_counts['Quote Date'])
-                
-                fig = px.line(daily_counts, x='Quote Date', y='Count', color='Product Type',
-                             title="Daily Product Data Entry Activity by Type")
-                st.plotly_chart(fig, use_container_width=True)
 
 def display_price_lookup():
     """Display price lookup interface"""
