@@ -460,6 +460,8 @@ def display_dashboard():
     sky_data = get_cached_data("SKY")
     zener_data = get_cached_data("Zener")
     ps_data = get_cached_data("PS")
+    quote_usd_data = get_cached_data("QuoteUSD")
+    quote_rmb_data = get_cached_data("QuoteRMB")
 
     # Dashboard metrics - First Row
     col1, col2, col3, col4 = st.columns(4)
@@ -499,7 +501,155 @@ def display_dashboard():
         total_count = esd_count + cmf_count + transistor_count + mos_count + sky_count + zener_count + ps_count
         st.metric("Total Products", total_count)
     
-    # Recent activity chart
+    # Quotes Analysis Section
+    st.markdown("---")
+    st.subheader("💰 Quotes Analysis")
+    
+    # Process quotes data for analysis
+    all_quotes = []
+    
+    # Process USD quotes
+    if quote_usd_data is not None and not quote_usd_data.empty:
+        for _, row in quote_usd_data.iterrows():
+            for i in range(1, 5):  # DC-1 to DC-4
+                dc_col = f'DC-{i}'
+                customer_col = f'End Customer {i}'
+                date_col = f'Quote Date {i}'
+                
+                if (dc_col in row and customer_col in row and date_col in row and 
+                    pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
+                    
+                    all_quotes.append({
+                        'Product_Category': row.get('Products', 'N/A'),
+                        'Product_Name': row.get('Product Name', 'N/A'),
+                        'Currency': 'USD',
+                        'Price': row[dc_col],
+                        'Customer': row[customer_col],
+                        'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
+                        'Distributor': row.get('Distributor', 'N/A')
+                    })
+    
+    # Process RMB quotes
+    if quote_rmb_data is not None and not quote_rmb_data.empty:
+        for _, row in quote_rmb_data.iterrows():
+            for i in range(1, 5):  # DC-1 to DC-4
+                dc_col = f'DC-{i}'
+                customer_col = f'End Customer {i}'
+                date_col = f'Quote Date {i}'
+                
+                if (dc_col in row and customer_col in row and date_col in row and 
+                    pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
+                    
+                    all_quotes.append({
+                        'Product_Category': row.get('Products', 'N/A'),
+                        'Product_Name': row.get('Product Name', 'N/A'),
+                        'Currency': 'RMB',
+                        'Price': row[dc_col],
+                        'Customer': row[customer_col],
+                        'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
+                        'Distributor': row.get('Distributor', 'N/A')
+                    })
+    
+    if all_quotes:
+        quotes_df = pd.DataFrame(all_quotes)
+        quotes_df = quotes_df.dropna(subset=['Quote_Date'])
+        
+        # Quotes metrics row
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            total_quotes = len(quotes_df)
+            st.metric("Total Quotes", total_quotes)
+        
+        with col2:
+            usd_quotes = len(quotes_df[quotes_df['Currency'] == 'USD'])
+            st.metric("USD Quotes", usd_quotes)
+        
+        with col3:
+            rmb_quotes = len(quotes_df[quotes_df['Currency'] == 'RMB'])
+            st.metric("RMB Quotes", rmb_quotes)
+        
+        with col4:
+            unique_customers = quotes_df['Customer'].nunique()
+            st.metric("Unique Customers", unique_customers)
+        
+        # Charts Row
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Quotes by Product Category
+            if not quotes_df.empty:
+                category_counts = quotes_df['Product_Category'].value_counts()
+                fig_category = px.pie(
+                    values=category_counts.values, 
+                    names=category_counts.index,
+                    title="Quotes Distribution by Product Category"
+                )
+                st.plotly_chart(fig_category, use_container_width=True)
+        
+        with col2:
+            # Quotes by Currency
+            if not quotes_df.empty:
+                currency_counts = quotes_df['Currency'].value_counts()
+                fig_currency = px.bar(
+                    x=currency_counts.index,
+                    y=currency_counts.values,
+                    title="Quotes by Currency",
+                    labels={'x': 'Currency', 'y': 'Number of Quotes'}
+                )
+                st.plotly_chart(fig_currency, use_container_width=True)
+        
+        # Recent Quotes Activity
+        st.subheader("📈 Recent Quotes Activity")
+        
+        # Filter last 6 months for better visualization
+        six_months_ago = pd.Timestamp.now() - pd.DateOffset(months=6)
+        recent_quotes = quotes_df[quotes_df['Quote_Date'] >= six_months_ago]
+        
+        if not recent_quotes.empty:
+            # Group by month and currency
+            recent_quotes['Month'] = recent_quotes['Quote_Date'].dt.to_period('M')
+            monthly_counts = recent_quotes.groupby(['Month', 'Currency']).size().reset_index(name='Count')
+            monthly_counts['Month'] = monthly_counts['Month'].astype(str)
+            
+            fig_timeline = px.line(
+                monthly_counts, 
+                x='Month', 
+                y='Count', 
+                color='Currency',
+                title="Monthly Quotes Activity (Last 6 Months)",
+                markers=True
+            )
+            st.plotly_chart(fig_timeline, use_container_width=True)
+        
+        # Top Customers
+        st.subheader("🏆 Top Customers by Quote Volume")
+        top_customers = quotes_df['Customer'].value_counts().head(10)
+        
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            fig_customers = px.bar(
+                x=top_customers.values,
+                y=top_customers.index,
+                orientation='h',
+                title="Top 10 Customers",
+                labels={'x': 'Number of Quotes', 'y': 'Customer'}
+            )
+            st.plotly_chart(fig_customers, use_container_width=True)
+        
+        with col2:
+            # Recent Quotes Table
+            st.write("**Recent Quotes (Last 10)**")
+            recent_quotes_display = quotes_df.sort_values('Quote_Date', ascending=False).head(10)
+            display_quotes = recent_quotes_display[['Product_Category', 'Product_Name', 'Currency', 'Price', 'Customer', 'Quote_Date']].copy()
+            display_quotes['Quote_Date'] = display_quotes['Quote_Date'].dt.strftime('%Y-%m-%d')
+            st.dataframe(display_quotes, use_container_width=True, hide_index=True)
+    
+    else:
+        st.info("No quotes data available for analysis")
+    
+    # Original Recent activity chart for product data
     if any([esd_data is not None and not esd_data.empty, 
             cmf_data is not None and not cmf_data.empty, 
             transistor_data is not None and not transistor_data.empty,
@@ -508,7 +658,8 @@ def display_dashboard():
             zener_data is not None and not zener_data.empty,
             ps_data is not None and not ps_data.empty]):
         
-        st.subheader("📈 Recent Quotation Activity")
+        st.markdown("---")
+        st.subheader("📊 Product Data Activity")
         
         # Combine recent data
         recent_data = []
@@ -529,7 +680,7 @@ def display_dashboard():
                 daily_counts['Quote Date'] = pd.to_datetime(daily_counts['Quote Date'])
                 
                 fig = px.line(daily_counts, x='Quote Date', y='Count', color='Product Type',
-                             title="Daily Quotation Activity by Product Type")
+                             title="Daily Product Data Entry Activity by Type")
                 st.plotly_chart(fig, use_container_width=True)
 
 def display_price_lookup():
