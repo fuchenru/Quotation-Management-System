@@ -539,22 +539,20 @@ def display_price_lookup():
     # Key columns to display
     if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  # Added Transistor
         if category == "MOS":
-            display_columns = ['Magnias P/N', 'Package', 'FG Supplier', 'FG Supplier P/N', 'Wafer Supplier', 'Wafer Supplier P/N',
-                              'Magnias Wafer P/N', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
+            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
         elif category == "Transistor":
-            display_columns = ['Magnias P/N', 'Package', 'FG Supplier', 'FG Supplier P/N', 'Polarity', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
+            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
         elif category == "CMF":  # CMF
-            display_columns = ['Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
+            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
         elif category == "Zener":  # Zener
-            display_columns = ['Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
+            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
         elif category == "PS":  # PS
-            display_columns = ['Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
+            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
         else:
-            display_columns = ['Magnias P/N', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price', 'Quote Date']
+            display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
     else:
-        display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
-                          'Parts RMB Price', 'Parts USD Price', 
-                          'Distributor RMB Price', 'Distributor USD Price', 'Quote Date']
+        display_columns = ['Product Name' if 'Product Name' in df.columns else 'Quote Date', 'Product',  
+                          'Parts RMB Price', 'Parts USD Price']
     
     display_columns = [col for col in display_columns if col in df.columns]
     
