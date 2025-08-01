@@ -557,7 +557,7 @@ def display_price_lookup():
     display_columns = [col for col in display_columns if col in df.columns]
     
     st.dataframe(filtered_df[display_columns], use_container_width=True)
-    
+
     # Price recommendations for searched product
     if search_term and not filtered_df.empty:
         st.subheader("💰 Latest Quote")
@@ -645,51 +645,8 @@ def display_product_details():
                 for i, (key, value) in enumerate(wafer_specs.items()):
                     with cols[i % 3]:
                         st.markdown(f"<div style='font-size: 0.9rem;'><strong>{key}:</strong><br>{value}</div>", unsafe_allow_html=True)
+            
 
-            # Quotation history
-            st.subheader("📈 Quotation History")
-            
-            # Display historical data
-            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
-                history_columns = ['Quote Date', 'Parts RMB Price', 'Parts USD Price', 'Notes']
-            else:
-                history_columns = ['Quote Date', 'Parts RMB Price', 'Parts USD Price', 
-                                 'Distributor RMB Price', 'Distributor USD Price', 'MPQ', 'Notes']
-            
-            history_columns = [col for col in history_columns if col in product_data.columns]
-            
-            st.dataframe(product_data[history_columns], use_container_width=True)
-            
-            # Price trend chart
-            if len(product_data) > 1 and 'Quote Date' in product_data.columns:
-                product_data_sorted = product_data.sort_values('Quote Date')
-                
-                fig = make_subplots(specs=[[{"secondary_y": True}]])
-                
-                # RMB prices
-                if 'Parts RMB Price' in product_data.columns:
-                    rmb_prices = pd.to_numeric(product_data_sorted['Parts RMB Price'], errors='coerce')
-                    fig.add_trace(
-                        go.Scatter(x=product_data_sorted['Quote Date'], y=rmb_prices, 
-                                  name="RMB Price", line=dict(color="blue")),
-                        secondary_y=False,
-                    )
-                
-                # USD prices
-                if 'Parts USD Price' in product_data.columns:
-                    usd_prices = pd.to_numeric(product_data_sorted['Parts USD Price'], errors='coerce')
-                    fig.add_trace(
-                        go.Scatter(x=product_data_sorted['Quote Date'], y=usd_prices, 
-                                  name="USD Price", line=dict(color="red")),
-                        secondary_y=True,
-                    )
-                
-                fig.update_xaxes(title_text="Date")
-                fig.update_yaxes(title_text="Price (RMB)", secondary_y=False)
-                fig.update_yaxes(title_text="Price (USD)", secondary_y=True)
-                fig.update_layout(title_text=f"{selected_product} - Parts Price Trend")
-                
-                st.plotly_chart(fig, use_container_width=True)
 
 def authenticated_main():
     """Main application function for authenticated users"""
