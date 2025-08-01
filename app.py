@@ -617,64 +617,6 @@ def display_product_details():
         product_data = df[df[product_col] == selected_product]
         
         if not product_data.empty:
-            # Display product specifications
-            st.subheader(f"🔧 {selected_product} Specifications")
-            
-            # Technical specifications (category-specific)
-            tech_specs = {}
-            
-            if category == "ESD":
-                # Get latest quote date for ESD
-                latest_date = product_data['Quote Date'].max() if 'Quote Date' in product_data.columns else 'N/A'
-                if latest_date != 'N/A' and latest_date is not None:
-                    latest_date = latest_date.strftime('%Y-%m-%d')
-                
-                tech_specs = {
-                    'Package': product_data['Package'].iloc[0] if 'Package' in product_data.columns else 'N/A',
-                    'POD Type': product_data['POD Type'].iloc[0] if 'POD Type' in product_data.columns else 'N/A',
-                    'VrwmMAX(V)': product_data['VrwmMAX(V)'].iloc[0] if 'VrwmMAX(V)' in product_data.columns else 'N/A',
-                    'VBR MIN(V)': product_data['VBR MIN(V)'].iloc[0] if 'VBR MIN(V)' in product_data.columns else 'N/A',
-                    'CJTYP(pF)': product_data['CJTYP(pF)'].iloc[0] if 'CJTYP(pF)' in product_data.columns else 'N/A',
-                    'CJMAX(pF)': product_data['CJMAX(pF)'].iloc[0] if 'CJMAX(pF)' in product_data.columns else 'N/A',
-                    'CH': product_data['CH'].iloc[0] if 'CH' in product_data.columns else 'N/A',
-                    'Direction': product_data['Direction'].iloc[0] if 'Direction' in product_data.columns else 'N/A',
-                    'ESDC(kV)': product_data['ESDC(kV)'].iloc[0] if 'ESDC(kV)' in product_data.columns else 'N/A',
-                    'ESDA(kV)': product_data['ESDA(kV)'].iloc[0] if 'ESDA(kV)' in product_data.columns else 'N/A',
-                    'Ipp8/20,2Ω(A)': product_data['Ipp8/20,2Ω(A)'].iloc[0] if 'Ipp8/20,2Ω(A)' in product_data.columns else 'N/A',
-                    'Ppk(W)': product_data['Ppk(W)'].iloc[0] if 'Ppk(W)' in product_data.columns else 'N/A',
-                    'VCTYP (V)': product_data['VCTYP (V)'].iloc[0] if 'VCTYP (V)' in product_data.columns else 'N/A',
-                    'MPQ': product_data['MPQ'].iloc[0] if 'MPQ' in product_data.columns else 'N/A',
-                    'Latest Quote Date': latest_date,
-                }
-            elif category in ["CMF", "Transistor", "SKY", "Zener", "PS"]:
-                # Show basic info with latest quote date
-                latest_date = product_data['Quote Date'].max() if 'Quote Date' in product_data.columns else 'N/A'
-                if latest_date != 'N/A' and latest_date is not None:
-                    latest_date = latest_date.strftime('%Y-%m-%d')
-                
-                tech_specs = {
-                    'Magnias P/N': selected_product,
-                    'Latest Quote Date': latest_date,
-                }
-                
-                # Add package and polarity for Transistor
-                if category == "Transistor":
-                    tech_specs['Package'] = product_data['Package'].iloc[0] if 'Package' in product_data.columns else 'N/A'
-                    tech_specs['Polarity'] = product_data['Polarity'].iloc[0] if 'Polarity' in product_data.columns else 'N/A'
-                    
-            elif category == "MOS":
-                tech_specs = {
-                    'Package': product_data['Package'].iloc[0] if 'Package' in product_data.columns else 'N/A',
-                    'Type': product_data['Type'].iloc[0] if 'Type' in product_data.columns else 'N/A',
-                    'VDS (V)': product_data['VDS (V)'].iloc[0] if 'VDS (V)' in product_data.columns else 'N/A',
-                    'ID (A)': product_data['ID (A)'].iloc[0] if 'ID (A)' in product_data.columns else 'N/A',
-                }
-            
-            # Display specifications in columns
-            cols = st.columns(3)
-            for i, (key, value) in enumerate(tech_specs.items()):
-                with cols[i % 3]:
-                    st.metric(key, value)
             
             # FG Supplier Information (for all categories)
             st.subheader("🏪 FG Supplier Information")
