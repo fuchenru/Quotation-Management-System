@@ -400,7 +400,7 @@ def get_latest_quotes(product_category, product_name):
         ]
         
         for _, row in usd_quotes.iterrows():
-            for i in range(1, 5):  # DC-1 to DC-4
+            for i in range(1, 10):  # DC-1 to DC-4
                 dc_col = f'DC-{i}'
                 customer_col = f'End Customer {i}'
                 date_col = f'Quote Date {i}'
@@ -410,7 +410,6 @@ def get_latest_quotes(product_category, product_name):
                     
                     quotes.append({
                         'Currency': 'USD',
-                        'Distributor': row.get('Distributor', 'N/A'),
                         'Price': row[dc_col],
                         'Customer': row[customer_col],
                         'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
@@ -425,7 +424,7 @@ def get_latest_quotes(product_category, product_name):
         ]
         
         for _, row in rmb_quotes.iterrows():
-            for i in range(1, 5):  # DC-1 to DC-4
+            for i in range(1, 10):  # DC-1 to DC-4
                 dc_col = f'DC-{i}'
                 customer_col = f'End Customer {i}'
                 date_col = f'Quote Date {i}'
@@ -435,7 +434,6 @@ def get_latest_quotes(product_category, product_name):
                     
                     quotes.append({
                         'Currency': 'RMB',
-                        'Distributor': row.get('Distributor', 'N/A'),
                         'Price': row[dc_col],
                         'Customer': row[customer_col],
                         'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
@@ -763,7 +761,6 @@ def display_price_lookup():
                     'Price': quote['Price'],
                     'Customer': quote['Customer'],
                     'Date': quote['Raw_Date'],
-                    'Distributor': quote['Distributor']
                 })
             
             quote_df = pd.DataFrame(quote_data)
