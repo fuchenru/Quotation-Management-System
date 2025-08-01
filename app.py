@@ -31,6 +31,8 @@ if 'data_loaded' not in st.session_state:
     st.session_state.sky_data = None
     st.session_state.zener_data = None
     st.session_state.ps_data = None
+    st.session_state.quote_usd_data = None
+    st.session_state.quote_rmb_data = None
 
 def authenticate_user(username, password):
     """Authenticate user with credentials from secrets"""
@@ -97,6 +99,9 @@ def logout():
     st.session_state.sky_data = None
     st.session_state.zener_data = None
     st.session_state.ps_data = None
+    # Add these new lines:
+    st.session_state.quote_usd_data = None
+    st.session_state.quote_rmb_data = None
     st.rerun()
 
 def load_google_sheet(worksheet_name):
@@ -347,6 +352,9 @@ def load_all_data():
         st.session_state.sky_data = load_google_sheet("SKY")
         st.session_state.zener_data = load_google_sheet("Zener")
         st.session_state.ps_data = load_google_sheet("PS")
+        # Add these new lines:
+        st.session_state.quote_usd_data = load_google_sheet("QuoteUSD")
+        st.session_state.quote_rmb_data = load_google_sheet("QuoteRMB")
         st.session_state.data_loaded = True
         st.session_state.last_refresh = datetime.now()
 
@@ -369,38 +377,75 @@ def get_cached_data(category):
         return st.session_state.zener_data
     elif category == "PS":
         return st.session_state.ps_data
+    # Add these new lines:
+    elif category == "QuoteUSD":
+        return st.session_state.quote_usd_data
+    elif category == "QuoteRMB":
+        return st.session_state.quote_rmb_data
     else:
         return None
 
-def get_price_recommendations(df, product_name, price_column):
-    """Get price recommendations based on historical data"""
-    if df is None or df.empty:
-        return None
+def get_latest_quotes(product_category, product_name):
+    """Get latest quotes for a specific product from both USD and RMB sheets"""
+    usd_data = get_cached_data("QuoteUSD")
+    rmb_data = get_cached_data("QuoteRMB")
     
-    # For MOS category, search by Magnias P/N instead of Product Name
-    search_column = 'Magnias P/N' if 'Magnias P/N' in df.columns else 'Product Name'
+    quotes = []
     
-    # Filter by product name (case insensitive)
-    product_data = df[df[search_column].str.contains(product_name, case=False, na=False)]
+    # Process USD quotes
+    if usd_data is not None and not usd_data.empty:
+        usd_quotes = usd_data[
+            (usd_data['Products'].str.contains(product_category, case=False, na=False)) &
+            (usd_data['Product Name'].str.contains(product_name, case=False, na=False))
+        ]
+        
+        for _, row in usd_quotes.iterrows():
+            for i in range(1, 5):  # DC-1 to DC-4
+                dc_col = f'DC-{i}'
+                customer_col = f'End Customer {i}'
+                date_col = f'Quote Date {i}'
+                
+                if (dc_col in row and customer_col in row and date_col in row and 
+                    pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
+                    
+                    quotes.append({
+                        'Currency': 'USD',
+                        'Distributor': row.get('Distributor', 'N/A'),
+                        'Price': row[dc_col],
+                        'Customer': row[customer_col],
+                        'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
+                        'Raw_Date': row[date_col]
+                    })
     
-    if product_data.empty:
-        return None
+    # Process RMB quotes
+    if rmb_data is not None and not rmb_data.empty:
+        rmb_quotes = rmb_data[
+            (rmb_data['Products'].str.contains(product_category, case=False, na=False)) &
+            (rmb_data['Product Name'].str.contains(product_name, case=False, na=False))
+        ]
+        
+        for _, row in rmb_quotes.iterrows():
+            for i in range(1, 5):  # DC-1 to DC-4
+                dc_col = f'DC-{i}'
+                customer_col = f'End Customer {i}'
+                date_col = f'Quote Date {i}'
+                
+                if (dc_col in row and customer_col in row and date_col in row and 
+                    pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
+                    
+                    quotes.append({
+                        'Currency': 'RMB',
+                        'Distributor': row.get('Distributor', 'N/A'),
+                        'Price': row[dc_col],
+                        'Customer': row[customer_col],
+                        'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
+                        'Raw_Date': row[date_col]
+                    })
     
-    # Calculate price statistics
-    prices = pd.to_numeric(product_data[price_column], errors='coerce').dropna()
+    # Sort by date descending (most recent first)
+    quotes.sort(key=lambda x: x['Quote_Date'] if pd.notna(x['Quote_Date']) else pd.Timestamp.min, reverse=True)
     
-    if prices.empty:
-        return None
-    
-    return {
-        'count': len(prices),
-        'min_price': prices.min(),
-        'max_price': prices.max(),
-        'avg_price': prices.mean(),
-        'median_price': prices.median(),
-        'latest_price': prices.iloc[-1] if len(prices) > 0 else None,
-        'latest_date': product_data['Quote Date'].max() if 'Quote Date' in product_data.columns else None
-    }
+    return quotes
 
 def display_dashboard():
     """Display main dashboard with key metrics"""
@@ -557,33 +602,45 @@ def display_price_lookup():
     display_columns = [col for col in display_columns if col in df.columns]
     
     st.dataframe(filtered_df[display_columns], use_container_width=True)
-
-    # Price recommendations for searched product
-    if search_term and not filtered_df.empty:
-        st.subheader("💰 Latest Quote")
+    
+    # Add Latest Quotes section
+    if search_term and not show_all:
+        st.markdown("---")
+        st.subheader("💰 Latest Quotes")
         
-        recommendations_rmb = get_price_recommendations(df, search_term, 'Parts RMB Price')
-        recommendations_usd = get_price_recommendations(df, search_term, 'Parts USD Price')
-
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.write("**RMB:**")
-            if recommendations_rmb:
-                st.write(f"- Historical quotes: {recommendations_rmb['count']}")
-                if recommendations_rmb['latest_date']:
-                    st.write(f"- Latest quote: ¥{recommendations_rmb['latest_price']:.4f} ({recommendations_rmb['latest_date'].strftime('%Y-%m-%d')})")
+        # Get the product name to search for quotes
+        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
+            # For these categories, use the search term as product name
+            product_name_for_quotes = search_term
+        else:
+            # For ESD, use the Product Name from the filtered results
+            if not filtered_df.empty and 'Product Name' in filtered_df.columns:
+                product_name_for_quotes = filtered_df['Product Name'].iloc[0]
             else:
-                st.write("No RMB price data available")
+                product_name_for_quotes = search_term
         
-        with col2:
-            st.write("**USD:**")
-            if recommendations_usd:
-                st.write(f"- Historical quotes: {recommendations_usd['count']}")
-                if recommendations_usd['latest_date']:
-                    st.write(f"- Latest quote: ${recommendations_usd['latest_price']:.4f} ({recommendations_usd['latest_date'].strftime('%Y-%m-%d')})")
-            else:
-                st.write("No USD price data available")
+        # Get latest quotes
+        quotes = get_latest_quotes(category, product_name_for_quotes)
+        
+        if quotes:
+            st.success(f"Found {len(quotes)} quotes for {category} - {product_name_for_quotes}")
+            
+            # Display quotes in a nice format
+            for i, quote in enumerate(quotes, 1):
+                with st.expander(f"Quote #{i} - {quote['Currency']} {quote['Price']} ({quote['Raw_Date']})"):
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.write(f"**Currency:** {quote['Currency']}")
+                    with col2:
+                        st.write(f"**Price:** {quote['Price']}")
+                    with col3:
+                        st.write(f"**Customer:** {quote['Customer']}")
+                    with col4:
+                        st.write(f"**Date:** {quote['Raw_Date']}")
+                    st.write(f"**Distributor:** {quote['Distributor']}")
+        else:
+            st.info(f"No quotes found for {category} - {product_name_for_quotes}")
+
 
 def display_product_details():
     """Display detailed product information"""
@@ -706,6 +763,9 @@ def authenticated_main():
             st.session_state.sky_data = None
             st.session_state.zener_data = None
             st.session_state.ps_data = None
+            # Add these new lines:
+            st.session_state.quote_usd_data = None
+            st.session_state.quote_rmb_data = None
             load_all_data()
             st.success("Data force reloaded!")
             st.rerun()
