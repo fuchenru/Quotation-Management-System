@@ -551,8 +551,8 @@ def display_price_lookup():
         else:
             display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
     else:
-        display_columns = ['Product Name' if 'Product Name' in df.columns else 'Quote Date', 'Product',  
-                          'Parts RMB Price', 'Parts USD Price']
+        display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
+                          'Parts RMB Price', 'Parts USD Price', 'Quote Date']
     
     display_columns = [col for col in display_columns if col in df.columns]
     
