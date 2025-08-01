@@ -625,11 +625,11 @@ def display_product_details():
                 'FG Supplier P/N': product_data['FG Supplier P/N'].iloc[0] if 'FG Supplier P/N' in product_data.columns else 'N/A',
             }
             
-            # Display FG supplier specifications in columns
+            # Display FG supplier specifications in columns with smaller font
             cols = st.columns(3)
             for i, (key, value) in enumerate(fg_specs.items()):
                 with cols[i % 3]:
-                    st.metric(key, value)
+                    st.markdown(f"<div style='font-size: 0.8rem;'><strong>{key}:</strong><br>{value}</div>", unsafe_allow_html=True)
             
             # Wafer supplier information (only for ESD and MOS)
             if category in ["ESD", "MOS"]:
@@ -642,11 +642,11 @@ def display_product_details():
                 if category == "MOS":
                     wafer_specs['Magnias Wafer P/N'] = product_data['Magnias Wafer P/N'].iloc[0] if 'Magnias Wafer P/N' in product_data.columns else 'N/A'
                 
-                # Display wafer specifications in columns
+                # Display wafer specifications in columns with smaller font
                 cols = st.columns(3)
                 for i, (key, value) in enumerate(wafer_specs.items()):
                     with cols[i % 3]:
-                        st.metric(key, value)
+                        st.markdown(f"<div style='font-size: 0.8rem;'><strong>{key}:</strong><br>{value}</div>", unsafe_allow_html=True)
 
             # Quotation history
             st.subheader("📈 Quotation History")
