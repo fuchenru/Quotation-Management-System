@@ -603,7 +603,7 @@ def display_product_details():
         return
     
     # Product selection
-    if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  # Added Transistor
+    if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
         product_col = 'Magnias P/N'
         products = sorted(df[product_col].dropna().unique())
         selected_product = st.selectbox("Select Magnias P/N:", products, key="details_product")
@@ -624,6 +624,11 @@ def display_product_details():
             tech_specs = {}
             
             if category == "ESD":
+                # Get latest quote date for ESD
+                latest_date = product_data['Quote Date'].max() if 'Quote Date' in product_data.columns else 'N/A'
+                if latest_date != 'N/A' and latest_date is not None:
+                    latest_date = latest_date.strftime('%Y-%m-%d')
+                
                 tech_specs = {
                     'Package': product_data['Package'].iloc[0] if 'Package' in product_data.columns else 'N/A',
                     'POD Type': product_data['POD Type'].iloc[0] if 'POD Type' in product_data.columns else 'N/A',
@@ -639,11 +644,11 @@ def display_product_details():
                     'Ppk(W)': product_data['Ppk(W)'].iloc[0] if 'Ppk(W)' in product_data.columns else 'N/A',
                     'VCTYP (V)': product_data['VCTYP (V)'].iloc[0] if 'VCTYP (V)' in product_data.columns else 'N/A',
                     'MPQ': product_data['MPQ'].iloc[0] if 'MPQ' in product_data.columns else 'N/A',
+                    'Latest Quote Date': latest_date,
                 }
-            elif category in ["CMF", "Transistor", "SKY", "Zener", "PS"]:  # Combined CMF and Transistor logic
-                # Both now have minimal specs - show basic info
+            elif category in ["CMF", "Transistor", "SKY", "Zener", "PS"]:
+                # Show basic info with latest quote date
                 latest_date = product_data['Quote Date'].max() if 'Quote Date' in product_data.columns else 'N/A'
-                # Convert timestamp to string if it's not 'N/A'
                 if latest_date != 'N/A' and latest_date is not None:
                     latest_date = latest_date.strftime('%Y-%m-%d')
                 
@@ -664,13 +669,6 @@ def display_product_details():
                     'VDS (V)': product_data['VDS (V)'].iloc[0] if 'VDS (V)' in product_data.columns else 'N/A',
                     'ID (A)': product_data['ID (A)'].iloc[0] if 'ID (A)' in product_data.columns else 'N/A',
                 }
-            elif category == "SKY":
-                tech_specs = {
-                    'IF (mA)': product_data['IF (mA)'].iloc[0] if 'IF (mA)' in product_data.columns else 'N/A',
-                    'IFSM (A)': product_data['IFSM (A)'].iloc[0] if 'IFSM (A)' in product_data.columns else 'N/A',
-                    'VRRM (V)': product_data['VRRM (V)'].iloc[0] if 'VRRM (V)' in product_data.columns else 'N/A',
-                    'Vf @ If= 1mA': product_data['Vf @ If= 1mA'].iloc[0] if 'Vf @ If= 1mA' in product_data.columns else 'N/A',
-                }
             
             # Display specifications in columns
             cols = st.columns(3)
@@ -678,65 +676,41 @@ def display_product_details():
                 with cols[i % 3]:
                     st.metric(key, value)
             
-            # For CMF and Transistor, show FG Supplier info instead of wafer supplier
-            if category in ["CMF", "Transistor", "SKY", "Zener", "PS"]:
-                st.subheader("🏪 FG Supplier Information")
-                fg_specs = {
-                    'FG Supplier': product_data['FG Supplier'].iloc[0] if 'FG Supplier' in product_data.columns else 'N/A',
-                    'FG Supplier P/N': product_data['FG Supplier P/N'].iloc[0] if 'FG Supplier P/N' in product_data.columns else 'N/A',
+            # FG Supplier Information (for all categories)
+            st.subheader("🏪 FG Supplier Information")
+            fg_specs = {
+                'FG Supplier': product_data['FG Supplier'].iloc[0] if 'FG Supplier' in product_data.columns else 'N/A',
+                'FG Supplier P/N': product_data['FG Supplier P/N'].iloc[0] if 'FG Supplier P/N' in product_data.columns else 'N/A',
+            }
+            
+            # Display FG supplier specifications in columns
+            cols = st.columns(3)
+            for i, (key, value) in enumerate(fg_specs.items()):
+                with cols[i % 3]:
+                    st.metric(key, value)
+            
+            # Wafer supplier information (only for ESD and MOS)
+            if category in ["ESD", "MOS"]:
+                st.subheader("📟 Wafer Supplier")
+                wafer_specs = {
+                    'Wafer Supplier': product_data['Wafer Supplier'].iloc[0] if 'Wafer Supplier' in product_data.columns else 'N/A',
                 }
                 
-                # Display FG supplier specifications in columns
-                cols = st.columns(3)
-                for i, (key, value) in enumerate(fg_specs.items()):
-                    with cols[i % 3]:
-                        st.metric(key, value)
-            else:
-                # Wafer supplier information for ESD and MOS
-                st.subheader("📟 Wafer Supplier")
-                wafer_specs = {}
-                
-                if category == "ESD":
-                    wafer_specs = {
-                        'Wafer Supplier': product_data['Wafer Supplier'].iloc[0] if 'Wafer Supplier' in product_data.columns else 'N/A',
-                        'Wafer Supplier Material Name': product_data['Wafer Supplier Material Name'].iloc[0] if 'Wafer Supplier Material Name' in product_data.columns else 'N/A',
-                        'Magnias Wafer P/N': product_data['Magnias Wafer P/N'].iloc[0] if 'Magnias Wafer P/N' in product_data.columns else 'N/A',
-                        'Wafer Price (RMB)': product_data['Wafer Price (RMB)'].iloc[0] if 'Wafer Price (RMB)' in product_data.columns else 'N/A',
-                    }
-                elif category == "MOS":
-                    wafer_specs = {
-                        'Wafer Supplier': product_data['Wafer Supplier'].iloc[0] if 'Wafer Supplier' in product_data.columns else 'N/A',
-                        'Wafer Supplier P/N': product_data['Wafer Supplier P/N'].iloc[0] if 'Wafer Supplier P/N' in product_data.columns else 'N/A',
-                        'Magnias Wafer P/N': product_data['Magnias Wafer P/N'].iloc[0] if 'Magnias Wafer P/N' in product_data.columns else 'N/A',
-                        'Wafer Price (RMB)': product_data['Wafer Price (RMB)'].iloc[0] if 'Wafer Price (RMB)' in product_data.columns else 'N/A',
-                    }
+                # Add Magnias Wafer P/N only for MOS
+                if category == "MOS":
+                    wafer_specs['Magnias Wafer P/N'] = product_data['Magnias Wafer P/N'].iloc[0] if 'Magnias Wafer P/N' in product_data.columns else 'N/A'
                 
                 # Display wafer specifications in columns
-                if wafer_specs:
-                    cols = st.columns(3)
-                    for i, (key, value) in enumerate(wafer_specs.items()):
-                        with cols[i % 3]:
-                            st.metric(key, value)
-
-                # Show MOS distributor info separately since it still has FG Supplier
-                if category == "MOS":
-                    st.subheader("🏪 Distributor Information")
-                    dis_specs = {
-                        'FG Supplier': product_data['FG Supplier'].iloc[0] if 'FG Supplier' in product_data.columns else 'N/A',
-                        'FG Supplier P/N': product_data['FG Supplier P/N'].iloc[0] if 'FG Supplier P/N' in product_data.columns else 'N/A',
-                    }
-                    
-                    # Display distributor specifications in columns
-                    cols = st.columns(3)
-                    for i, (key, value) in enumerate(dis_specs.items()):
-                        with cols[i % 3]:
-                            st.metric(key, value)
+                cols = st.columns(3)
+                for i, (key, value) in enumerate(wafer_specs.items()):
+                    with cols[i % 3]:
+                        st.metric(key, value)
 
             # Quotation history
             st.subheader("📈 Quotation History")
             
             # Display historical data
-            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  # Added Transistor
+            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
                 history_columns = ['Quote Date', 'Parts RMB Price', 'Parts USD Price', 'Notes']
             else:
                 history_columns = ['Quote Date', 'Parts RMB Price', 'Parts USD Price', 
