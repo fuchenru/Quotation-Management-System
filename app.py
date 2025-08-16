@@ -795,7 +795,7 @@ def display_price_lookup():
         if 'Magnias P/N' in df.columns:
             display_columns.append('Magnias P/N')
         display_columns.extend(['Parts RMB Price', 'Parts USD Price', 'Quote Date'])
-    elif category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS", "TVS"]:
+    elif category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
         display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
     else:
         display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
@@ -862,7 +862,7 @@ def display_product_details():
         return
     
     # Product selection
-    if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS", "TVS"]:
+    if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
         product_col = 'Magnias P/N'
         products = sorted(df[product_col].dropna().unique())
         selected_product = st.selectbox("Select Magnias P/N:", products, key="details_product")
