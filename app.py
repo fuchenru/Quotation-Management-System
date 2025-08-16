@@ -359,7 +359,7 @@ def load_all_data():
         st.session_state.sky_data = load_google_sheet("SKY")
         st.session_state.zener_data = load_google_sheet("Zener")
         st.session_state.ps_data = load_google_sheet("PS")
-        st.session_state.ps_data = load_google_sheet("TVS")
+        st.session_state.tvs_data = load_google_sheet("TVS")
         st.session_state.quote_usd_data = load_google_sheet("QuoteUSD")
         st.session_state.quote_rmb_data = load_google_sheet("QuoteRMB")
         st.session_state.data_loaded = True
