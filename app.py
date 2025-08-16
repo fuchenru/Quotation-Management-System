@@ -31,6 +31,7 @@ if 'data_loaded' not in st.session_state:
     st.session_state.sky_data = None
     st.session_state.zener_data = None
     st.session_state.ps_data = None
+    st.session_state.tvs_data = None
     st.session_state.quote_usd_data = None
     st.session_state.quote_rmb_data = None
 
@@ -99,7 +100,7 @@ def logout():
     st.session_state.sky_data = None
     st.session_state.zener_data = None
     st.session_state.ps_data = None
-    # Add these new lines:
+    st.session_state.tvs_data = None
     st.session_state.quote_usd_data = None
     st.session_state.quote_rmb_data = None
     st.rerun()
@@ -107,7 +108,6 @@ def logout():
 def load_google_sheet(worksheet_name):
     """Load data from specific Google Sheets worksheet"""
     try:
-        # Use Streamlit secrets instead of connections.toml
         creds_info = st.secrets["connections"]["gsheets"]
         
         scope = [
@@ -200,6 +200,10 @@ def get_column_names(category):
         return [
             'Quote Date', 'Magnias P/N', 'Package', 'FG Supplier', 'FG Supplier P/N', 'Parts RMB Price', 'Parts USD Price'
         ]
+    elif category == "TVS":
+        return [
+            'Finished product supplier', 'Finished Product Supplier Material Name' , 'Parts RMB Price', 'Parts USD Price', 'Quote Date', 'Product Name', 'Package', 'PPK @ 10/1000us (W)', 'Distributor RMB Price', 'Distributor USD Price', 'Notes'
+        ]
     return []
 
 def display_data_management():
@@ -208,7 +212,7 @@ def display_data_management():
     st.markdown("---")
     
     # Category selection
-    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS"], key="mgmt_category")
+    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS", "TVS"], key="mgmt_category")
 
     # Get cached data
     df = get_cached_data(category)
@@ -256,6 +260,9 @@ def display_add_product_form(category):
             if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
                 form_data['FG Supplier'] = st.text_input("FG Supplier", key="add_fg_supplier")
                 form_data['FG Supplier P/N'] = st.text_input("FG Supplier P/N", key="add_fg_supplier_pn")
+            elif category in ["TVS"]:
+                form_data["Finished product supplier"] = st.text_input("Finished product supplier", key="add_fp_supplier")
+                form_data["Finished Product Supplier Material Name"] = st.text_input("Finished Product Supplier Material Name", key="add_fpm_supplier")
             else:
                 form_data['Wafer Supplier'] = st.text_input("Wafer Supplier", key="add_wafer_supplier")
                 form_data['Wafer Supplier Material Name'] = st.text_input("Wafer Supplier Material Name", key="add_wafer_material")
@@ -322,7 +329,7 @@ def display_add_product_form(category):
         submitted = st.form_submit_button("➕ Add Product", type="primary")
         
         if submitted:
-            required_field = 'Magnias P/N' if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else 'Product Name'  
+            required_field = 'Magnias P/N' if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS", "TVS"] else 'Product Name'  
             if form_data[required_field]:
                 # Convert date to string
                 form_data['Quote Date'] = form_data['Quote Date'].strftime('%Y.%m.%d')
@@ -352,7 +359,7 @@ def load_all_data():
         st.session_state.sky_data = load_google_sheet("SKY")
         st.session_state.zener_data = load_google_sheet("Zener")
         st.session_state.ps_data = load_google_sheet("PS")
-        # Add these new lines:
+        st.session_state.ps_data = load_google_sheet("TVS")
         st.session_state.quote_usd_data = load_google_sheet("QuoteUSD")
         st.session_state.quote_rmb_data = load_google_sheet("QuoteRMB")
         st.session_state.data_loaded = True
@@ -377,7 +384,8 @@ def get_cached_data(category):
         return st.session_state.zener_data
     elif category == "PS":
         return st.session_state.ps_data
-    # Add these new lines:
+    elif category == "TVS":
+        return st.session_state.tvs_data
     elif category == "QuoteUSD":
         return st.session_state.quote_usd_data
     elif category == "QuoteRMB":
@@ -490,6 +498,7 @@ def display_dashboard():
     sky_data = get_cached_data("SKY")
     zener_data = get_cached_data("Zener")
     ps_data = get_cached_data("PS")
+    tvs_data = get_cached_data("TVS")
     quote_usd_data = get_cached_data("QuoteUSD")
     quote_rmb_data = get_cached_data("QuoteRMB")
 
@@ -513,7 +522,7 @@ def display_dashboard():
         st.metric("MOS Products", mos_count)
 
     # Dashboard metrics - Second Row
-    col5, col6, col7, col8 = st.columns(4)
+    col5, col6, col7, col8, col9 = st.columns(5)
 
     with col5:
         sky_count = len(sky_data) if sky_data is not None else 0
@@ -527,8 +536,12 @@ def display_dashboard():
         ps_count = len(ps_data) if ps_data is not None else 0
         st.metric("PS Products", ps_count)
 
-    with col8:
-        total_count = esd_count + cmf_count + transistor_count + mos_count + sky_count + zener_count + ps_count
+    with col7:
+        tvs_count = len(tvs_data) if tvs_data is not None else 0
+        st.metric("TVS Products", tvs_count)
+
+    with col9:
+        total_count = esd_count + cmf_count + transistor_count + mos_count + sky_count + zener_count + ps_count + tvs_count
         st.metric("Total Products", total_count)
     
     # Quotes Analysis Section
@@ -715,13 +728,13 @@ def display_price_lookup():
     st.markdown("---")
     
     # Product category selection - Add "All Products" as first option
-    category = st.selectbox("Select Product Category:", ["All Products", "ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS"])
+    category = st.selectbox("Select Product Category:", ["All Products", "ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS", "TVS"])
 
     # Get cached data - handle "All Products" selection
     if category == "All Products":
         # Combine all product data
         all_dfs = []
-        for cat in ["ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS"]:
+        for cat in ["ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS", "TVS"]:
             cat_df = get_cached_data(cat)
             if cat_df is not None and not cat_df.empty:
                 cat_df_copy = cat_df.copy()
@@ -744,8 +757,8 @@ def display_price_lookup():
         search_label = "🔍 Search Product Name/Magnias P/N:"
         search_placeholder = "Enter product name or part number"
     else:
-        search_label = "🔍 Search Magnias P/N:" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "🔍 Search Product Name:"  
-        search_placeholder = "Enter Magnias P/N" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"] else "Enter product name or part number"
+        search_label = "🔍 Search Magnias P/N:" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS", "TVS"] else "🔍 Search Product Name:"  
+        search_placeholder = "Enter Magnias P/N" if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS", "TVS"] else "Enter product name or part number"
     
     search_term = st.text_input(search_label, placeholder=search_placeholder)
     
@@ -761,7 +774,7 @@ def display_price_lookup():
             filtered_df = df[mask]
         else:
             # Try to find in Product Name or Magnias P/N columns
-            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  
+            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS", "TVS"]:  
                 search_column = 'Magnias P/N'
             else:
                 search_column = 'Product Name' if 'Product Name' in df.columns else 'Product'
@@ -782,7 +795,7 @@ def display_price_lookup():
         if 'Magnias P/N' in df.columns:
             display_columns.append('Magnias P/N')
         display_columns.extend(['Parts RMB Price', 'Parts USD Price', 'Quote Date'])
-    elif category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
+    elif category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS", "TVS"]:
         display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
     else:
         display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
@@ -798,7 +811,7 @@ def display_price_lookup():
         st.subheader("💰 Latest Quotes")
         
         # Get the product name to search for quotes
-        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
+        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS", "TVS"]:
             # For these categories, use the search term as product name
             product_name_for_quotes = search_term
         else:
@@ -839,7 +852,7 @@ def display_product_details():
     st.markdown("---")
     
     # Category and product selection
-    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS"], key="details_category")
+    category = st.selectbox("Select Product Category:", ["ESD", "CMF", "Transistor", "MOS", "SKY", "Zener", "PS", "TVS"], key="details_category")
 
     # Get cached data
     df = get_cached_data(category)
@@ -849,7 +862,7 @@ def display_product_details():
         return
     
     # Product selection
-    if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
+    if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS", "TVS"]:
         product_col = 'Magnias P/N'
         products = sorted(df[product_col].dropna().unique())
         selected_product = st.selectbox("Select Magnias P/N:", products, key="details_product")
@@ -954,7 +967,7 @@ def authenticated_main():
             st.session_state.sky_data = None
             st.session_state.zener_data = None
             st.session_state.ps_data = None
-            # Add these new lines:
+            st.session_state.tvs_data = None
             st.session_state.quote_usd_data = None
             st.session_state.quote_rmb_data = None
             load_all_data()
@@ -974,6 +987,7 @@ def authenticated_main():
             sky_count = len(st.session_state.sky_data) if st.session_state.sky_data is not None else 0
             zener_count = len(st.session_state.zener_data) if st.session_state.zener_data is not None else 0
             ps_count = len(st.session_state.ps_data) if st.session_state.ps_data is not None else 0
+            tvs_count = len(st.session_state.tvs_data) if st.session_state.tvs_data is not None else 0
 
             st.write(f"ESD: {esd_count}")
             st.write(f"CMF: {cmf_count}")
@@ -982,7 +996,8 @@ def authenticated_main():
             st.write(f"SKY: {sky_count}")
             st.write(f"Zener: {zener_count}")
             st.write(f"PS: {ps_count}")
-            st.write(f"**Total: {esd_count + cmf_count + transistor_count + mos_count + sky_count + zener_count + ps_count}**")
+            st.write(f"TVS: {tvs_count}")
+            st.write(f"**Total: {esd_count + cmf_count + transistor_count + mos_count + sky_count + zener_count + ps_count + tvs_count}**")
         else:
             st.write("Loading...")
     
