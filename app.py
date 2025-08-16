@@ -536,7 +536,7 @@ def display_dashboard():
         ps_count = len(ps_data) if ps_data is not None else 0
         st.metric("PS Products", ps_count)
 
-    with col7:
+    with col8:
         tvs_count = len(tvs_data) if tvs_data is not None else 0
         st.metric("TVS Products", tvs_count)
 
