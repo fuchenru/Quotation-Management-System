@@ -883,7 +883,7 @@ def display_product_details():
                     'Wafer Supplier': product_data['Wafer Supplier'].iloc[0] if 'Wafer Supplier' in product_data.columns else 'N/A',
                 }
                 
-                if category == ["ESD", "MOS"]:
+                if category in ["ESD", "MOS"]:
                     wafer_specs['Magnias Wafer P/N'] = product_data['Magnias Wafer P/N'].iloc[0] if 'Magnias Wafer P/N' in product_data.columns else 'N/A'
                 
                 # Display wafer specifications in columns with smaller font
