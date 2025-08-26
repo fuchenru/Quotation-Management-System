@@ -167,12 +167,10 @@ def get_column_names(category):
     """Get column names for each category"""
     if category == "ESD":
         return [
-            'Wafer Supplier', 'Wafer Supplier Material Name', 'Magnias Wafer P/N', 'Wafer Price (RMB)',
-            'Finished product supplier', 'Finished Product Supplier Material Name', 'Parts RMB Price', 'Parts USD Price',
-            'Quote Date', 'Product Name', 'Package', 'POD Type', 'VrwmMAX(V)', 'VBR MIN(V)',
-            'CJTYP(pF)', 'CJMAX(pF)', 'CH', 'Direction', 'ESDC(kV)', 'ESDA(kV)',
-            'Ipp8/20,2Ω(A)', 'Ppk(W)', 'VCTYP (V)', 'MPQ',
-            'Distributor RMB Price', 'Distributor USD Price', 'Notes'
+            'Quote Date', 'Product Name', 'Package', 'FG Supplier', 'FG Supplier P/N', 
+            'Parts RMB Price', 'Parts USD Price', 'Wafer Supplier', 'Wafer Supplier P/N', 
+            'Magnias Wafer P/N', 'Wafer Price (RMB)', 'Distributor RMB Price', 
+            'Distributor USD Price', 'Notes'
         ]
     elif category == "CMF":
         return [
@@ -240,62 +238,36 @@ def display_add_product_form(category):
         form_data = {}
         
         # Essential fields in first column
-        with col1:
-            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  
-                form_data['Magnias P/N'] = st.text_input("Magnias P/N*", key="add_magnias_pn")
-                if category == "MOS":
-                    form_data['Package'] = st.text_input("Package", key="add_package")
-                    form_data['Type'] = st.selectbox("Type", ["N-Channel", "P-Channel", "Enhancement", "Depletion", "N/A"], key="add_mos_type")
-                elif category == "Transistor":
-                    form_data['Package'] = st.text_input("Package", key="add_package")
-                    form_data['Polarity'] = st.selectbox("Polarity", ["NPN", "PNP", "N/A"], key="add_polarity")
-            else:
-                form_data['Product Name'] = st.text_input("Product Name*", key="add_product_name")
+    with col1:
+        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:  
+            form_data['Magnias P/N'] = st.text_input("Magnias P/N*", key="add_magnias_pn")
+            if category == "MOS":
                 form_data['Package'] = st.text_input("Package", key="add_package")
-                
-                if category == "ESD":
-                    form_data['POD Type'] = st.text_input("POD Type", key="add_pod_type")
+                form_data['Type'] = st.selectbox("Type", ["N-Channel", "P-Channel", "Enhancement", "Depletion", "N/A"], key="add_mos_type")
+            elif category == "Transistor":
+                form_data['Package'] = st.text_input("Package", key="add_package")
+                form_data['Polarity'] = st.selectbox("Polarity", ["NPN", "PNP", "N/A"], key="add_polarity")
+        else:  # ESD and TVS
+            form_data['Product Name'] = st.text_input("Product Name*", key="add_product_name")
+            form_data['Package'] = st.text_input("Package", key="add_package")
         
-        with col2:
-            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
-                form_data['FG Supplier'] = st.text_input("FG Supplier", key="add_fg_supplier")
-                form_data['FG Supplier P/N'] = st.text_input("FG Supplier P/N", key="add_fg_supplier_pn")
-            elif category in ["TVS"]:
-                form_data["Finished product supplier"] = st.text_input("Finished product supplier", key="add_fp_supplier")
-                form_data["Finished Product Supplier Material Name"] = st.text_input("Finished Product Supplier Material Name", key="add_fpm_supplier")
-            else:
-                form_data['Wafer Supplier'] = st.text_input("Wafer Supplier", key="add_wafer_supplier")
-                form_data['Wafer Supplier Material Name'] = st.text_input("Wafer Supplier Material Name", key="add_wafer_material")
-                form_data['MPQ'] = st.number_input("MPQ", min_value=0, step=1, key="add_mpq")
+    with col2:
+        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PS"]:
+            form_data['FG Supplier'] = st.text_input("FG Supplier", key="add_fg_supplier")
+            form_data['FG Supplier P/N'] = st.text_input("FG Supplier P/N", key="add_fg_supplier_pn")
+        elif category == "ESD":
+            form_data['FG Supplier'] = st.text_input("FG Supplier", key="add_fg_supplier")
+            form_data['FG Supplier P/N'] = st.text_input("FG Supplier P/N", key="add_fg_supplier_pn")
+        elif category in ["TVS"]:
+            form_data["Finished product supplier"] = st.text_input("Finished product supplier", key="add_fp_supplier")
+            form_data["Finished Product Supplier Material Name"] = st.text_input("Finished Product Supplier Material Name", key="add_fpm_supplier")
         
         # Remove the Technical Specifications section for Transistor since it's now simplified
         # Only show Technical Specifications for ESD and MOS
-        if category in ["ESD", "MOS"]:
+        if category in ["MOS"]:
             st.markdown("**Technical Specifications**")
-            
-            # Category-specific technical fields (keep existing ESD, MOS logic, remove Transistor)
-            if category == "ESD":
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    form_data['VrwmMAX(V)'] = st.number_input("VrwmMAX(V)", step=0.1, key="add_vrwm")
-                    form_data['VBR MIN(V)'] = st.number_input("VBR MIN(V)", step=0.1, key="add_vbr")
-                    form_data['CJTYP(pF)'] = st.number_input("CJTYP(pF)", step=0.1, key="add_cjtyp")
-                with col2:
-                    form_data['CJMAX(pF)'] = st.number_input("CJMAX(pF)", step=0.1, key="add_cjmax")
-                    form_data['CH'] = st.number_input("CH", step=1, key="add_ch")
-                    form_data['Direction'] = st.selectbox("Direction", ["Uni", "Bi", "N/A"], key="add_direction")
-                with col3:
-                    form_data['ESDC(kV)'] = st.number_input("ESDC(kV)", step=0.1, key="add_esdc")
-                    form_data['ESDA(kV)'] = st.number_input("ESDA(kV)", step=0.1, key="add_esda")
-                    form_data['VCTYP (V)'] = st.number_input("VCTYP (V)", step=0.1, key="add_vctyp")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    form_data['Ipp8/20,2Ω(A)'] = st.number_input("Ipp8/20,2Ω(A)", step=0.1, key="add_ipp")
-                with col2:
-                    form_data['Ppk(W)'] = st.number_input("Ppk(W)", step=0.1, key="add_ppk")
                     
-            elif category == "MOS":
+            if category == "MOS":
                 col1, col2 = st.columns(2)
                 with col1:
                     form_data['VDS (V)'] = st.number_input("VDS (V)", step=0.1, key="add_vds")
@@ -309,11 +281,25 @@ def display_add_product_form(category):
         with col2:
             form_data['Parts USD Price'] = st.number_input("Parts USD Price", step=0.01, key="add_parts_usd")
 
-        
+
         # Additional fields - only for ESD and MOS
         if category == "ESD":
-            form_data['Magnias Wafer P/N'] = st.text_input("Magnias Wafer P/N", key="add_wafer_pn")
-            form_data['Wafer Price (RMB)'] = st.number_input("Wafer Price (RMB)", step=0.01, key="add_wafer_price")
+            st.markdown("**Wafer Information**")
+            col1, col2 = st.columns(2)
+            with col1:
+                form_data['Wafer Supplier'] = st.text_input("Wafer Supplier", key="add_esd_wafer_supplier")
+                form_data['Wafer Supplier P/N'] = st.text_input("Wafer Supplier P/N", key="add_esd_wafer_supplier_pn")
+            with col2:
+                form_data['Magnias Wafer P/N'] = st.text_input("Magnias Wafer P/N", key="add_esd_magnias_wafer_pn")
+                form_data['Wafer Price (RMB)'] = st.number_input("Wafer Price (RMB)", step=0.01, key="add_esd_wafer_price")
+            
+            st.markdown("**Distributor Pricing**")
+            col1, col2 = st.columns(2)
+            with col1:
+                form_data['Distributor RMB Price'] = st.number_input("Distributor RMB Price", step=0.01, key="add_dist_rmb")
+            with col2:
+                form_data['Distributor USD Price'] = st.number_input("Distributor USD Price", step=0.01, key="add_dist_usd")
+                
         elif category == "MOS":
             col1, col2 = st.columns(2)
             with col1:
