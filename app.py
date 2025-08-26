@@ -1018,7 +1018,6 @@ def display_price_lookup():
             quotes = get_latest_quotes(category, product_name_for_quotes)
             
             if quotes:
-                st.success(f"Found {len(quotes)} quotes for {category} - {product_name_for_quotes}")
                 
                 # Display quotes in a table format with formatted prices
                 quote_data = []
