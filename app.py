@@ -394,7 +394,7 @@ def get_latest_quotes(product_category, product_name):
         ]
         
         for _, row in usd_quotes.iterrows():
-            for i in range(1, 5):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-4
                 dc_col = f'DC-{i}'
                 date_col = f'Quote Date {i}'
                 
@@ -434,7 +434,7 @@ def get_latest_quotes(product_category, product_name):
         ]
         
         for _, row in rmb_quotes.iterrows():
-            for i in range(1, 5):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-4
                 dc_col = f'DC-{i}'
                 date_col = f'Quote Date {i}'
                 
@@ -540,7 +540,7 @@ def display_dashboard():
     # Process USD quotes
     if quote_usd_data is not None and not quote_usd_data.empty:
         for _, row in quote_usd_data.iterrows():
-            for i in range(1, 5):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-4
                 dc_col = f'DC-{i}'
                 date_col = f'Quote Date {i}'
                 
@@ -576,7 +576,7 @@ def display_dashboard():
     # Process RMB quotes
     if quote_rmb_data is not None and not quote_rmb_data.empty:
         for _, row in quote_rmb_data.iterrows():
-            for i in range(1, 5):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-4
                 dc_col = f'DC-{i}'
                 date_col = f'Quote Date {i}'
                 
@@ -745,7 +745,7 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
         
         if matching_row is not None:
             # Update existing row - find next available DC column
-            for i in range(1, 5):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-4
                 dc_col = f'DC-{i}'
                 if pd.isna(matching_row.get(dc_col)) or matching_row.get(dc_col) == '':
                     # Found empty slot, update this column and corresponding date/customer
@@ -792,7 +792,11 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
                     'DC-1', 'Quote Date 1', 'End Customer 1',
                     'DC-2', 'Quote Date 2', 'End Customer 2', 
                     'DC-3', 'Quote Date 3', 'End Customers 3',
-                    'DC-4', 'Quote Date 4', 'End Customers 4'
+                    'DC-4', 'Quote Date 4', 'End Customers 4',
+                    'DC-5', 'Quote Date 5', 'End Customers 5',
+                    'DC-6', 'Quote Date 6', 'End Customers 6',
+                    'DC-7', 'Quote Date 7', 'End Customers 7',
+                    'DC-8', 'Quote Date 8', 'End Customers 8',
                 ]
             
             # Create new row data
@@ -867,7 +871,7 @@ def display_add_quote_form(category, product_name):
                     st.error(message)
             else:
                 st.error("Please enter a valid price and customer name!")
-                
+
 def display_price_lookup():
     """Display price lookup interface with enhanced quote management"""
     st.title("🔍 Price Lookup & Recommendations")
