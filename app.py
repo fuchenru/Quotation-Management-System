@@ -724,6 +724,12 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
         sheet = gc.open_by_url(creds_info["spreadsheet"])
         worksheet = sheet.worksheet(worksheet_name)
         
+        # Format price with currency symbol and 4 decimal places
+        if currency == "USD":
+            formatted_price = f"${price:.4f}"
+        else:  # RMB
+            formatted_price = f"¥{price:.4f}"
+        
         # Get all existing data to find the right row or create new one
         existing_data = worksheet.get_all_records()
         existing_df = pd.DataFrame(existing_data) if existing_data else pd.DataFrame()
@@ -772,7 +778,7 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
                         col_index_customer = list(existing_df.columns).index(customer_col) + 1
                     
                     # Update the cells (row_index + 2 because gspread is 1-indexed and row 1 is headers)
-                    worksheet.update_cell(row_index + 2, col_index_dc, price)
+                    worksheet.update_cell(row_index + 2, col_index_dc, formatted_price)  # Use formatted price
                     worksheet.update_cell(row_index + 2, col_index_date, quote_date)
                     worksheet.update_cell(row_index + 2, col_index_customer, customer)
                     
@@ -810,9 +816,9 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
             if 'Distributor' in headers:
                 new_row_data[headers.index('Distributor')] = distributor
             
-            # Add the quote in DC-1
+            # Add the quote in DC-1 with formatted price
             if 'DC-1' in headers:
-                new_row_data[headers.index('DC-1')] = price
+                new_row_data[headers.index('DC-1')] = formatted_price  # Use formatted price
             if 'Quote Date 1' in headers:
                 new_row_data[headers.index('Quote Date 1')] = quote_date
             if 'End Customer 1' in headers:
@@ -824,6 +830,28 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
     except Exception as e:
         return False, f"Error adding quote: {str(e)}"
 
+def format_price_display(price_value, currency="USD"):
+    """Format price for display with currency symbol and 4 decimal places"""
+    if pd.isna(price_value) or price_value == '' or price_value is None:
+        return ''
+    
+    try:
+        # Extract numeric value if it's already formatted with currency symbol
+        if isinstance(price_value, str):
+            # Remove currency symbols and convert to float
+            numeric_value = float(price_value.replace('$', '').replace('¥', '').replace(',', ''))
+        else:
+            numeric_value = float(price_value)
+        
+        # Format with appropriate currency symbol
+        if currency == "USD":
+            return f"${numeric_value:.4f}"
+        else:  # RMB
+            return f"¥{numeric_value:.4f}"
+            
+    except (ValueError, TypeError):
+        return str(price_value)  # Return original if conversion fails
+
 def display_add_quote_form(category, product_name):
     """Display form to add a new quote"""
     st.subheader("➕ Add New Quote")
@@ -833,7 +861,7 @@ def display_add_quote_form(category, product_name):
         
         with col1:
             currency = st.selectbox("Currency", ["USD", "RMB"], key="quote_currency")
-            price = st.number_input("Price", min_value=0.0, step=0.01, key="quote_price")
+            price = st.number_input("Price", min_value=0.0, step=0.0001, format="%.4f", key="quote_price")  # Changed step and format
             customer = st.text_input("End Customer", key="quote_customer")
         
         with col2:
@@ -953,7 +981,17 @@ def display_price_lookup():
     
     display_columns = [col for col in display_columns if col in df.columns]
     
-    st.dataframe(filtered_df[display_columns], use_container_width=True)
+    # Format prices in the dataframe for display
+    display_df = filtered_df[display_columns].copy()
+    
+    # Format price columns
+    if 'Parts RMB Price' in display_df.columns:
+        display_df['Parts RMB Price'] = display_df['Parts RMB Price'].apply(lambda x: format_price_display(x, "RMB"))
+    
+    if 'Parts USD Price' in display_df.columns:
+        display_df['Parts USD Price'] = display_df['Parts USD Price'].apply(lambda x: format_price_display(x, "USD"))
+    
+    st.dataframe(display_df, use_container_width=True)
     
     # Enhanced Latest Quotes and Quote Management section - only show if there's a search term and not "All Products"
     if search_term and category != "All Products":
@@ -982,13 +1020,16 @@ def display_price_lookup():
             if quotes:
                 st.success(f"Found {len(quotes)} quotes for {category} - {product_name_for_quotes}")
                 
-                # Display quotes in a table format
+                # Display quotes in a table format with formatted prices
                 quote_data = []
                 for i, quote in enumerate(quotes, 1):
+                    # Format the price based on currency
+                    formatted_quote_price = format_price_display(quote['Price'], quote['Currency'])
+                    
                     quote_data.append({
                         'Quote #': i,
                         'Currency': quote['Currency'],
-                        'Price': quote['Price'],
+                        'Price': formatted_quote_price,  # Use formatted price
                         'Customer': quote['Customer'],
                         'Date': quote['Raw_Date'],
                     })
