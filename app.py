@@ -853,7 +853,7 @@ def format_price_display(price_value, currency="USD"):
         return str(price_value)  # Return original if conversion fails
 
 def display_add_quote_form(category, product_name):
-    """Display form to add a new quote"""
+    """Display form to add a new quote - IMPROVED VERSION"""
     st.subheader("➕ Add New Quote")
     
     with st.form("add_quote_form"):
@@ -861,7 +861,16 @@ def display_add_quote_form(category, product_name):
         
         with col1:
             currency = st.selectbox("Currency", ["USD", "RMB"], key="quote_currency")
-            price = st.number_input("Price", min_value=0.0, step=0.0001, format="%.4f", key="quote_price")  # Changed step and format
+            
+            # SOLUTION 1: Use text_input for more flexible price entry
+            price_str = st.text_input(
+                "Price", 
+                value="0.0000",
+                placeholder="Enter price (e.g., 1.2345)",
+                key="quote_price_text",
+                help="Enter price with up to 4 decimal places"
+            )
+            
             customer = st.text_input("End Customer", key="quote_customer")
         
         with col2:
@@ -871,6 +880,13 @@ def display_add_quote_form(category, product_name):
         submitted = st.form_submit_button("💰 Add Quote", type="primary")
         
         if submitted:
+            # Convert price_str to float if using text input
+            try:
+                price = float(price_str) if price_str else 0.0
+            except ValueError:
+                st.error("Please enter a valid numeric price!")
+                return
+            
             if price > 0 and customer.strip():
                 # Convert date to string format
                 quote_date_str = quote_date.strftime('%Y-%m-%d')
@@ -899,6 +915,7 @@ def display_add_quote_form(category, product_name):
                     st.error(message)
             else:
                 st.error("Please enter a valid price and customer name!")
+
 
 def display_price_lookup():
     """Display price lookup interface with enhanced quote management"""
