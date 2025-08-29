@@ -839,19 +839,44 @@ def get_latest_quotes_with_distributor(category, product_name):
     
     try:
         # Load both USD and RMB quote sheets
-        usd_data = st.session_state.get('quote_usd_data') or load_google_sheet("QuoteUSD")
-        rmb_data = st.session_state.get('quote_rmb_data') or load_google_sheet("QuoteRMB")
+        usd_data = st.session_state.get('quote_usd_data')
+        if usd_data is None:
+            usd_data = load_google_sheet("QuoteUSD")
+            
+        rmb_data = st.session_state.get('quote_rmb_data')
+        if rmb_data is None:
+            rmb_data = load_google_sheet("QuoteRMB")
         
         # Process USD quotes
         if usd_data is not None and not usd_data.empty:
-            quotes.extend(extract_quotes_from_sheet(usd_data, category, product_name, "USD"))
+            usd_quotes = extract_quotes_from_sheet(usd_data, category, product_name, "USD")
+            quotes.extend(usd_quotes)
         
         # Process RMB quotes  
         if rmb_data is not None and not rmb_data.empty:
-            quotes.extend(extract_quotes_from_sheet(rmb_data, category, product_name, "RMB"))
+            rmb_quotes = extract_quotes_from_sheet(rmb_data, category, product_name, "RMB")
+            quotes.extend(rmb_quotes)
         
-        # Sort by date (most recent first)
-        quotes.sort(key=lambda x: x['Raw_Date'], reverse=True)
+        # Sort by date (most recent first) - handle date parsing safely
+        def safe_date_sort(quote):
+            try:
+                # Try to parse the date for sorting
+                date_str = quote.get('Raw_Date', '')
+                if isinstance(date_str, str) and date_str:
+                    # Handle various date formats
+                    from datetime import datetime
+                    try:
+                        return datetime.strptime(date_str, '%m/%d/%Y')
+                    except:
+                        try:
+                            return datetime.strptime(date_str, '%Y-%m-%d')
+                        except:
+                            return datetime.min
+                return datetime.min
+            except:
+                return datetime.min
+        
+        quotes.sort(key=safe_date_sort, reverse=True)
         
         return quotes[:10]  # Return top 10 most recent quotes
         
@@ -863,15 +888,29 @@ def extract_quotes_from_sheet(df, category, product_name, currency):
     """Extract quotes from a specific sheet with distributor information"""
     quotes = []
     
-    # Filter for matching product
-    if 'Products' in df.columns and 'Product Name' in df.columns:
-        matching_rows = df[
-            (df['Products'].str.contains(category, case=False, na=False)) &
-            (df['Product Name'].str.contains(product_name, case=False, na=False))
-        ]
+    try:
+        # Check if required columns exist
+        if 'Products' not in df.columns or 'Product Name' not in df.columns:
+            return quotes
+        
+        # Create boolean masks for filtering
+        products_mask = df['Products'].str.contains(category, case=False, na=False)
+        product_name_mask = df['Product Name'].str.contains(product_name, case=False, na=False)
+        
+        # Combine masks and filter
+        combined_mask = products_mask & product_name_mask
+        matching_rows = df[combined_mask]
+        
+        if matching_rows.empty:
+            return quotes
         
         for _, row in matching_rows.iterrows():
-            distributor = row.get('Distributor', 'N/A') if pd.notna(row.get('Distributor')) else 'N/A'
+            # Get distributor from Column C
+            distributor_value = row.get('Distributor', '')
+            if pd.isna(distributor_value) or distributor_value == '':
+                distributor = 'N/A'
+            else:
+                distributor = str(distributor_value).strip()
             
             # Extract quotes from DC-1 through DC-8 columns
             for i in range(1, 9):
@@ -879,7 +918,7 @@ def extract_quotes_from_sheet(df, category, product_name, currency):
                 date_col = f'Quote Date {i}'
                 
                 # Handle customer column naming variations
-                if i == 3 or i == 4:
+                if i in [3, 4]:
                     customer_col = f'End Customers {i}'  # Plural for 3 & 4
                     if customer_col not in df.columns:
                         customer_col = f'End Customer {i}'  # Try singular
@@ -888,25 +927,35 @@ def extract_quotes_from_sheet(df, category, product_name, currency):
                     if customer_col not in df.columns:
                         customer_col = f'End Customers {i}'  # Try plural
                 
-                # Check if quote data exists
-                price_value = row.get(dc_col)
-                date_value = row.get(date_col)
-                customer_value = row.get(customer_col)
+                # Skip if columns don't exist
+                if dc_col not in df.columns or date_col not in df.columns or customer_col not in df.columns:
+                    continue
                 
-                if (pd.notna(price_value) and price_value != '' and 
-                    pd.notna(date_value) and date_value != '' and
-                    pd.notna(customer_value) and customer_value != ''):
-                    
+                # Get values
+                price_value = row.get(dc_col, '')
+                date_value = row.get(date_col, '')
+                customer_value = row.get(customer_col, '')
+                
+                # Check if all required values exist and are not empty
+                price_valid = not pd.isna(price_value) and str(price_value).strip() != ''
+                date_valid = not pd.isna(date_value) and str(date_value).strip() != ''
+                customer_valid = not pd.isna(customer_value) and str(customer_value).strip() != ''
+                
+                if price_valid and date_valid and customer_valid:
                     quotes.append({
-                        'Price': price_value,
+                        'Price': str(price_value).strip(),
                         'Currency': currency,
-                        'Customer': customer_value,
-                        'Distributor': distributor,  # Include distributor from column C
-                        'Raw_Date': date_value,
+                        'Customer': str(customer_value).strip(),
+                        'Distributor': distributor,
+                        'Raw_Date': str(date_value).strip(),
                         'Quote_Column': dc_col
                     })
-    
-    return quotes
+        
+        return quotes
+        
+    except Exception as e:
+        print(f"Error in extract_quotes_from_sheet: {str(e)}")
+        return quotes
 
 def format_price_display(price_value, currency="USD"):
     """Format price for display with currency symbol and exactly 4 decimal places"""
