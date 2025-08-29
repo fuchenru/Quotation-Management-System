@@ -153,12 +153,41 @@ def update_google_sheet(worksheet_name, data_dict, row_index=None):
         if row_index is None:
             # Add new row
             worksheet.append_row(list(data_dict.values()))
-            return True, "Row added successfully"
+            
+            # Get the row number of the newly added row
+            new_row_number = len(worksheet.get_all_values())
+            num_columns = len(data_dict)
+            
+            # Apply left alignment to the new row
+            # Format the range for the entire new row
+            range_name = f"A{new_row_number}:{chr(ord('A') + num_columns - 1)}{new_row_number}"
+            
+            worksheet.format(range_name, {
+                "horizontalAlignment": "LEFT",
+                "textFormat": {
+                    "bold": False
+                }
+            })
+            
+            return True, "Row added successfully with left alignment"
         else:
             # Update existing row (row_index + 2 because gspread is 1-indexed and row 1 is headers)
+            target_row = row_index + 2
             for col_index, value in enumerate(data_dict.values(), start=1):
-                worksheet.update_cell(row_index + 2, col_index, value)
-            return True, "Row updated successfully"
+                worksheet.update_cell(target_row, col_index, value)
+            
+            # Apply left alignment to the updated row
+            num_columns = len(data_dict)
+            range_name = f"A{target_row}:{chr(ord('A') + num_columns - 1)}{target_row}"
+            
+            worksheet.format(range_name, {
+                "horizontalAlignment": "LEFT",
+                "textFormat": {
+                    "bold": False
+                }
+            })
+            
+            return True, "Row updated successfully with left alignment"
             
     except Exception as e:
         return False, f"Error updating sheet: {str(e)}"
