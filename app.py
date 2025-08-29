@@ -307,9 +307,9 @@ def display_add_product_form(category):
         col1, col2 = st.columns(2)
         with col1:
             # Use text input for direct entry, then validate and format
-            parts_rmb_input = st.text_input("Parts RMB Price", placeholder="Enter price (e.g., 1.2345)", key="add_parts_rmb")
+            parts_rmb_input = st.text_input("Parts RMB Price", placeholder="Enter price (e.g., 1.23456)", key="add_parts_rmb")
         with col2:
-            parts_usd_input = st.text_input("Parts USD Price", placeholder="Enter price (e.g., 0.1750)", key="add_parts_usd")
+            parts_usd_input = st.text_input("Parts USD Price", placeholder="Enter price (e.g., 0.17501)", key="add_parts_usd")
 
         # Additional fields - only for ESD and MOS
         if category == "ESD":
@@ -320,14 +320,14 @@ def display_add_product_form(category):
                 form_data['Wafer Supplier P/N'] = st.text_input("Wafer Supplier P/N", key="add_esd_wafer_supplier_pn")
             with col2:
                 form_data['Magnias Wafer P/N'] = st.text_input("Magnias Wafer P/N", key="add_esd_magnias_wafer_pn")
-                wafer_price_input = st.text_input("Wafer Price (RMB)", placeholder="Enter price (e.g., 25.0000)", key="add_esd_wafer_price")
+                wafer_price_input = st.text_input("Wafer Price (RMB)", placeholder="Enter price (e.g., 25.00000)", key="add_esd_wafer_price")
             
             st.markdown("**Distributor Pricing**")
             col1, col2 = st.columns(2)
             with col1:
-                dist_rmb_input = st.text_input("Distributor RMB Price", placeholder="Enter price (e.g., 2.5000)", key="add_dist_rmb")
+                dist_rmb_input = st.text_input("Distributor RMB Price", placeholder="Enter price (e.g., 2.50000)", key="add_dist_rmb")
             with col2:
-                dist_usd_input = st.text_input("Distributor USD Price", placeholder="Enter price (e.g., 0.3500)", key="add_dist_usd")
+                dist_usd_input = st.text_input("Distributor USD Price", placeholder="Enter price (e.g., 0.35000)", key="add_dist_usd")
                 
         elif category == "MOS":
             col1, col2 = st.columns(2)
@@ -336,7 +336,7 @@ def display_add_product_form(category):
                 form_data['Wafer Supplier P/N'] = st.text_input("Wafer Supplier P/N", key="add_mos_wafer_supplier_pn")
             with col2:
                 form_data['Magnias Wafer P/N'] = st.text_input("Magnias Wafer P/N", key="add_mos_magnias_wafer_pn")
-                wafer_price_input = st.text_input("Wafer Price (RMB)", placeholder="Enter price (e.g., 25.0000)", key="add_mos_wafer_price")
+                wafer_price_input = st.text_input("Wafer Price (RMB)", placeholder="Enter price (e.g., 25.00000)", key="add_mos_wafer_price")
         
         form_data['Quote Date'] = st.date_input("Quote Date", value=datetime.now().date(), key="add_quote_date")
         form_data['Notes'] = st.text_area("Notes", key="add_notes")
@@ -350,41 +350,41 @@ def display_add_product_form(category):
                 try:
                     # Format Parts RMB Price
                     if parts_rmb_input.strip():
-                        form_data['Parts RMB Price'] = f"{float(parts_rmb_input):.4f}"
+                        form_data['Parts RMB Price'] = f"{float(parts_rmb_input):.5f}"
                     else:
-                        form_data['Parts RMB Price'] = "0.0000"
+                        form_data['Parts RMB Price'] = "0.00000"
                     
                     # Format Parts USD Price
                     if parts_usd_input.strip():
-                        form_data['Parts USD Price'] = f"{float(parts_usd_input):.4f}"
+                        form_data['Parts USD Price'] = f"{float(parts_usd_input):.5f}"
                     else:
-                        form_data['Parts USD Price'] = "0.0000"
+                        form_data['Parts USD Price'] = "0.00000"
                     
                     # Format category-specific prices
                     if category == "ESD":
                         if wafer_price_input.strip():
-                            form_data['Wafer Price (RMB)'] = f"{float(wafer_price_input):.4f}"
+                            form_data['Wafer Price (RMB)'] = f"{float(wafer_price_input):.5f}"
                         else:
-                            form_data['Wafer Price (RMB)'] = "0.0000"
+                            form_data['Wafer Price (RMB)'] = "0.00000"
                             
                         if dist_rmb_input.strip():
-                            form_data['Distributor RMB Price'] = f"{float(dist_rmb_input):.4f}"
+                            form_data['Distributor RMB Price'] = f"{float(dist_rmb_input):.5f}"
                         else:
-                            form_data['Distributor RMB Price'] = "0.0000"
+                            form_data['Distributor RMB Price'] = "0.00000"
                             
                         if dist_usd_input.strip():
-                            form_data['Distributor USD Price'] = f"{float(dist_usd_input):.4f}"
+                            form_data['Distributor USD Price'] = f"{float(dist_usd_input):.5f}"
                         else:
-                            form_data['Distributor USD Price'] = "0.0000"
+                            form_data['Distributor USD Price'] = "0.00000"
                     
                     elif category == "MOS":
                         if wafer_price_input.strip():
-                            form_data['Wafer Price (RMB)'] = f"{float(wafer_price_input):.4f}"
+                            form_data['Wafer Price (RMB)'] = f"{float(wafer_price_input):.5f}"
                         else:
-                            form_data['Wafer Price (RMB)'] = "0.0000"
+                            form_data['Wafer Price (RMB)'] = "0.00000"
                     
                 except ValueError as e:
-                    st.error("Please enter valid numeric values for prices (e.g., 1.2345)")
+                    st.error("Please enter valid numeric values for prices (e.g., 1.23456)")
                     return
                 
                 # Convert date to string
