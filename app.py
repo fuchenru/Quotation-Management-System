@@ -267,29 +267,29 @@ def display_add_product_form(category):
         form_data = {}
         
         # Essential fields in first column
-    with col1:
-        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PowerSwitch"]:  
-            form_data['Magnias P/N'] = st.text_input("Magnias P/N*", key="add_magnias_pn")
-            if category == "MOS":
+        with col1:
+            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PowerSwitch"]:  
+                form_data['Magnias P/N'] = st.text_input("Magnias P/N*", key="add_magnias_pn")
+                if category == "MOS":
+                    form_data['Package'] = st.text_input("Package", key="add_package")
+                    form_data['Type'] = st.selectbox("Type", ["N-Channel", "P-Channel", "Enhancement", "Depletion", "N/A"], key="add_mos_type")
+                elif category == "Transistor":
+                    form_data['Package'] = st.text_input("Package", key="add_package")
+                    form_data['Polarity'] = st.selectbox("Polarity", ["NPN", "PNP", "N/A"], key="add_polarity")
+            else:  # ESD and TVS
+                form_data['Product Name'] = st.text_input("Product Name*", key="add_product_name")
                 form_data['Package'] = st.text_input("Package", key="add_package")
-                form_data['Type'] = st.selectbox("Type", ["N-Channel", "P-Channel", "Enhancement", "Depletion", "N/A"], key="add_mos_type")
-            elif category == "Transistor":
-                form_data['Package'] = st.text_input("Package", key="add_package")
-                form_data['Polarity'] = st.selectbox("Polarity", ["NPN", "PNP", "N/A"], key="add_polarity")
-        else:  # ESD and TVS
-            form_data['Product Name'] = st.text_input("Product Name*", key="add_product_name")
-            form_data['Package'] = st.text_input("Package", key="add_package")
         
-    with col2:
-        if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PowerSwitch"]:
-            form_data['FG Supplier'] = st.text_input("FG Supplier", key="add_fg_supplier")
-            form_data['FG Supplier P/N'] = st.text_input("FG Supplier P/N", key="add_fg_supplier_pn")
-        elif category == "ESD":
-            form_data['FG Supplier'] = st.text_input("FG Supplier", key="add_fg_supplier")
-            form_data['FG Supplier P/N'] = st.text_input("FG Supplier P/N", key="add_fg_supplier_pn")
-        elif category in ["TVS"]:
-            form_data["Finished product supplier"] = st.text_input("Finished product supplier", key="add_fp_supplier")
-            form_data["Finished Product Supplier Material Name"] = st.text_input("Finished Product Supplier Material Name", key="add_fpm_supplier")
+        with col2:
+            if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PowerSwitch"]:
+                form_data['FG Supplier'] = st.text_input("FG Supplier", key="add_fg_supplier")
+                form_data['FG Supplier P/N'] = st.text_input("FG Supplier P/N", key="add_fg_supplier_pn")
+            elif category == "ESD":
+                form_data['FG Supplier'] = st.text_input("FG Supplier", key="add_fg_supplier")
+                form_data['FG Supplier P/N'] = st.text_input("FG Supplier P/N", key="add_fg_supplier_pn")
+            elif category in ["TVS"]:
+                form_data["Finished product supplier"] = st.text_input("Finished product supplier", key="add_fp_supplier")
+                form_data["Finished Product Supplier Material Name"] = st.text_input("Finished Product Supplier Material Name", key="add_fpm_supplier")
         
         # Remove the Technical Specifications section for Transistor since it's now simplified
         # Only show Technical Specifications for ESD and MOS
@@ -306,10 +306,10 @@ def display_add_product_form(category):
         st.markdown("**Pricing Information**")
         col1, col2 = st.columns(2)
         with col1:
-            form_data['Parts RMB Price'] = st.number_input("Parts RMB Price", step=0.01, key="add_parts_rmb")
+            # Use text input for direct entry, then validate and format
+            parts_rmb_input = st.text_input("Parts RMB Price", placeholder="Enter price (e.g., 1.2345)", key="add_parts_rmb")
         with col2:
-            form_data['Parts USD Price'] = st.number_input("Parts USD Price", step=0.01, key="add_parts_usd")
-
+            parts_usd_input = st.text_input("Parts USD Price", placeholder="Enter price (e.g., 0.1750)", key="add_parts_usd")
 
         # Additional fields - only for ESD and MOS
         if category == "ESD":
@@ -320,14 +320,14 @@ def display_add_product_form(category):
                 form_data['Wafer Supplier P/N'] = st.text_input("Wafer Supplier P/N", key="add_esd_wafer_supplier_pn")
             with col2:
                 form_data['Magnias Wafer P/N'] = st.text_input("Magnias Wafer P/N", key="add_esd_magnias_wafer_pn")
-                form_data['Wafer Price (RMB)'] = st.number_input("Wafer Price (RMB)", step=0.01, key="add_esd_wafer_price")
+                wafer_price_input = st.text_input("Wafer Price (RMB)", placeholder="Enter price (e.g., 25.0000)", key="add_esd_wafer_price")
             
             st.markdown("**Distributor Pricing**")
             col1, col2 = st.columns(2)
             with col1:
-                form_data['Distributor RMB Price'] = st.number_input("Distributor RMB Price", step=0.01, key="add_dist_rmb")
+                dist_rmb_input = st.text_input("Distributor RMB Price", placeholder="Enter price (e.g., 2.5000)", key="add_dist_rmb")
             with col2:
-                form_data['Distributor USD Price'] = st.number_input("Distributor USD Price", step=0.01, key="add_dist_usd")
+                dist_usd_input = st.text_input("Distributor USD Price", placeholder="Enter price (e.g., 0.3500)", key="add_dist_usd")
                 
         elif category == "MOS":
             col1, col2 = st.columns(2)
@@ -336,7 +336,7 @@ def display_add_product_form(category):
                 form_data['Wafer Supplier P/N'] = st.text_input("Wafer Supplier P/N", key="add_mos_wafer_supplier_pn")
             with col2:
                 form_data['Magnias Wafer P/N'] = st.text_input("Magnias Wafer P/N", key="add_mos_magnias_wafer_pn")
-                form_data['Wafer Price (RMB)'] = st.number_input("Wafer Price (RMB)", step=0.01, key="add_mos_wafer_price")
+                wafer_price_input = st.text_input("Wafer Price (RMB)", placeholder="Enter price (e.g., 25.0000)", key="add_mos_wafer_price")
         
         form_data['Quote Date'] = st.date_input("Quote Date", value=datetime.now().date(), key="add_quote_date")
         form_data['Notes'] = st.text_area("Notes", key="add_notes")
@@ -346,6 +346,47 @@ def display_add_product_form(category):
         if submitted:
             required_field = 'Magnias P/N' if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PowerSwitch", "TVS"] else 'Product Name'  
             if form_data[required_field]:
+                # Process and format price inputs
+                try:
+                    # Format Parts RMB Price
+                    if parts_rmb_input.strip():
+                        form_data['Parts RMB Price'] = f"{float(parts_rmb_input):.4f}"
+                    else:
+                        form_data['Parts RMB Price'] = "0.0000"
+                    
+                    # Format Parts USD Price
+                    if parts_usd_input.strip():
+                        form_data['Parts USD Price'] = f"{float(parts_usd_input):.4f}"
+                    else:
+                        form_data['Parts USD Price'] = "0.0000"
+                    
+                    # Format category-specific prices
+                    if category == "ESD":
+                        if wafer_price_input.strip():
+                            form_data['Wafer Price (RMB)'] = f"{float(wafer_price_input):.4f}"
+                        else:
+                            form_data['Wafer Price (RMB)'] = "0.0000"
+                            
+                        if dist_rmb_input.strip():
+                            form_data['Distributor RMB Price'] = f"{float(dist_rmb_input):.4f}"
+                        else:
+                            form_data['Distributor RMB Price'] = "0.0000"
+                            
+                        if dist_usd_input.strip():
+                            form_data['Distributor USD Price'] = f"{float(dist_usd_input):.4f}"
+                        else:
+                            form_data['Distributor USD Price'] = "0.0000"
+                    
+                    elif category == "MOS":
+                        if wafer_price_input.strip():
+                            form_data['Wafer Price (RMB)'] = f"{float(wafer_price_input):.4f}"
+                        else:
+                            form_data['Wafer Price (RMB)'] = "0.0000"
+                    
+                except ValueError as e:
+                    st.error("Please enter valid numeric values for prices (e.g., 1.2345)")
+                    return
+                
                 # Convert date to string
                 form_data['Quote Date'] = form_data['Quote Date'].strftime('%Y.%m.%d')
                 # Ensure all columns are present with empty values if not filled
