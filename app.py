@@ -1093,8 +1093,8 @@ def display_add_quote_form(category, product_name):
                 return
             
             if price > 0 and customer.strip():
-                # Convert date to string format
-                quote_date_str = quote_date.strftime('%Y-%m-%d')
+                # Convert date to M/D/YYYY format (e.g., 8/25/2025)
+                quote_date_str = quote_date.strftime('%m/%d/%Y').lstrip('0').replace('/0', '/')
                 
                 success, message = add_quote_to_sheet(
                     currency, category, product_name, price, 
