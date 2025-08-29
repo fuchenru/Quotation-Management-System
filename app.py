@@ -833,6 +833,81 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
     except Exception as e:
         return False, f"Error adding quote: {str(e)}"
 
+def get_latest_quotes_with_distributor(category, product_name):
+    """Get latest quotes for a product including distributor information"""
+    quotes = []
+    
+    try:
+        # Load both USD and RMB quote sheets
+        usd_data = st.session_state.get('quote_usd_data') or load_google_sheet("QuoteUSD")
+        rmb_data = st.session_state.get('quote_rmb_data') or load_google_sheet("QuoteRMB")
+        
+        # Process USD quotes
+        if usd_data is not None and not usd_data.empty:
+            quotes.extend(extract_quotes_from_sheet(usd_data, category, product_name, "USD"))
+        
+        # Process RMB quotes  
+        if rmb_data is not None and not rmb_data.empty:
+            quotes.extend(extract_quotes_from_sheet(rmb_data, category, product_name, "RMB"))
+        
+        # Sort by date (most recent first)
+        quotes.sort(key=lambda x: x['Raw_Date'], reverse=True)
+        
+        return quotes[:10]  # Return top 10 most recent quotes
+        
+    except Exception as e:
+        st.error(f"Error loading quotes: {str(e)}")
+        return []
+
+def extract_quotes_from_sheet(df, category, product_name, currency):
+    """Extract quotes from a specific sheet with distributor information"""
+    quotes = []
+    
+    # Filter for matching product
+    if 'Products' in df.columns and 'Product Name' in df.columns:
+        matching_rows = df[
+            (df['Products'].str.contains(category, case=False, na=False)) &
+            (df['Product Name'].str.contains(product_name, case=False, na=False))
+        ]
+        
+        for _, row in matching_rows.iterrows():
+            distributor = row.get('Distributor', 'N/A') if pd.notna(row.get('Distributor')) else 'N/A'
+            
+            # Extract quotes from DC-1 through DC-8 columns
+            for i in range(1, 9):
+                dc_col = f'DC-{i}'
+                date_col = f'Quote Date {i}'
+                
+                # Handle customer column naming variations
+                if i == 3 or i == 4:
+                    customer_col = f'End Customers {i}'  # Plural for 3 & 4
+                    if customer_col not in df.columns:
+                        customer_col = f'End Customer {i}'  # Try singular
+                else:
+                    customer_col = f'End Customer {i}'    # Singular for 1 & 2, 5-8
+                    if customer_col not in df.columns:
+                        customer_col = f'End Customers {i}'  # Try plural
+                
+                # Check if quote data exists
+                price_value = row.get(dc_col)
+                date_value = row.get(date_col)
+                customer_value = row.get(customer_col)
+                
+                if (pd.notna(price_value) and price_value != '' and 
+                    pd.notna(date_value) and date_value != '' and
+                    pd.notna(customer_value) and customer_value != ''):
+                    
+                    quotes.append({
+                        'Price': price_value,
+                        'Currency': currency,
+                        'Customer': customer_value,
+                        'Distributor': distributor,  # Include distributor from column C
+                        'Raw_Date': date_value,
+                        'Quote_Column': dc_col
+                    })
+    
+    return quotes
+
 def format_price_display(price_value, currency="USD"):
     """Format price for display with currency symbol and exactly 4 decimal places"""
     if pd.isna(price_value) or price_value == '' or price_value is None:
@@ -1041,8 +1116,8 @@ def display_price_lookup():
                 else:
                     product_name_for_quotes = search_term
             
-            # Get latest quotes
-            quotes = get_latest_quotes(category, product_name_for_quotes)
+            # Get latest quotes with enhanced distributor extraction
+            quotes = get_latest_quotes_with_distributor(category, product_name_for_quotes)
             
             if quotes:
                 # Display quotes in a table format with formatted prices and distributor column
