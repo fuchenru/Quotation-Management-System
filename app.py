@@ -711,6 +711,9 @@ def display_dashboard():
 def add_quote_to_sheet(currency, product_category, product_name, price, customer, distributor, quote_date):
     """Add a new quote to the appropriate Google Sheets tab (QuoteUSD or QuoteRMB)"""
     try:
+        # Force price to 4 decimal places
+        price = round(float(price), 4)
+        
         worksheet_name = f"Quote{currency}"
         
         creds_info = st.secrets["connections"]["gsheets"]
@@ -724,7 +727,7 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
         sheet = gc.open_by_url(creds_info["spreadsheet"])
         worksheet = sheet.worksheet(worksheet_name)
         
-        # Format price with currency symbol and 4 decimal places
+        # Format price with currency symbol and exactly 4 decimal places
         if currency == "USD":
             formatted_price = f"${price:.4f}"
         else:  # RMB
@@ -831,7 +834,7 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
         return False, f"Error adding quote: {str(e)}"
 
 def format_price_display(price_value, currency="USD"):
-    """Format price for display with currency symbol and 4 decimal places"""
+    """Format price for display with currency symbol and exactly 4 decimal places"""
     if pd.isna(price_value) or price_value == '' or price_value is None:
         return ''
     
@@ -843,7 +846,10 @@ def format_price_display(price_value, currency="USD"):
         else:
             numeric_value = float(price_value)
         
-        # Format with appropriate currency symbol
+        # Force to exactly 4 decimal places
+        numeric_value = round(numeric_value, 4)
+        
+        # Format with appropriate currency symbol and exactly 4 decimal places
         if currency == "USD":
             return f"${numeric_value:.4f}"
         else:  # RMB
@@ -853,7 +859,7 @@ def format_price_display(price_value, currency="USD"):
         return str(price_value)  # Return original if conversion fails
 
 def display_add_quote_form(category, product_name):
-    """Display form to add a new quote - IMPROVED VERSION"""
+    """Display form to add a new quote - IMPROVED VERSION with 4 decimal place enforcement"""
     st.subheader("➕ Add New Quote")
     
     with st.form("add_quote_form"):
@@ -862,13 +868,13 @@ def display_add_quote_form(category, product_name):
         with col1:
             currency = st.selectbox("Currency", ["USD", "RMB"], key="quote_currency")
             
-            # SOLUTION 1: Use text_input for more flexible price entry
+            # Enhanced price input with 4 decimal place enforcement
             price_str = st.text_input(
                 "Price", 
                 value="0.0000",
-                placeholder="Enter price (e.g., 1.2345)",
+                placeholder="Enter price (will be rounded to 4 decimal places)",
                 key="quote_price_text",
-                help="Enter price with up to 4 decimal places"
+                help="Enter price - will automatically be formatted to exactly 4 decimal places"
             )
             
             customer = st.text_input("End Customer", key="quote_customer")
@@ -880,9 +886,14 @@ def display_add_quote_form(category, product_name):
         submitted = st.form_submit_button("💰 Add Quote", type="primary")
         
         if submitted:
-            # Convert price_str to float if using text input
+            # Convert price_str to float and force 4 decimal places
             try:
                 price = float(price_str) if price_str else 0.0
+                price = round(price, 4)  # Force to 4 decimal places
+                
+                # Display the rounded price to user for confirmation
+                st.info(f"Price will be saved as: {format_price_display(price, currency)}")
+                
             except ValueError:
                 st.error("Please enter a valid numeric price!")
                 return
@@ -915,7 +926,6 @@ def display_add_quote_form(category, product_name):
                     st.error(message)
             else:
                 st.error("Please enter a valid price and customer name!")
-
 
 def display_price_lookup():
     """Display price lookup interface with enhanced quote management"""
@@ -1001,7 +1011,7 @@ def display_price_lookup():
     # Format prices in the dataframe for display
     display_df = filtered_df[display_columns].copy()
     
-    # Format price columns
+    # Format price columns to exactly 4 decimal places
     if 'Parts RMB Price' in display_df.columns:
         display_df['Parts RMB Price'] = display_df['Parts RMB Price'].apply(lambda x: format_price_display(x, "RMB"))
     
@@ -1035,17 +1045,17 @@ def display_price_lookup():
             quotes = get_latest_quotes(category, product_name_for_quotes)
             
             if quotes:
-                
-                # Display quotes in a table format with formatted prices
+                # Display quotes in a table format with formatted prices and distributor column
                 quote_data = []
                 for i, quote in enumerate(quotes, 1):
-                    # Format the price based on currency
+                    # Format the price based on currency with exactly 4 decimal places
                     formatted_quote_price = format_price_display(quote['Price'], quote['Currency'])
                     
                     quote_data.append({
                         'Quote #': i,
                         'Currency': quote['Currency'],
-                        'Price': formatted_quote_price,  # Use formatted price
+                        'Price': formatted_quote_price,  # Use formatted price with 4 decimals
+                        'Distributor': quote.get('Distributor', 'N/A'),  # Add distributor column
                         'Customer': quote['Customer'],
                         'Date': quote['Raw_Date'],
                     })
