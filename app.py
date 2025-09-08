@@ -482,9 +482,10 @@ def get_latest_quotes(product_category, product_name):
         ]
         
         for _, row in usd_quotes.iterrows():
-            for i in range(1, 9):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-8
                 dc_col = f'DC-{i}'
                 date_col = f'Quote Date {i}'
+                distributor_col = f'Distributor-{i}'  # NEW: Individual distributor
                 
                 # Handle the inconsistent column naming for End Customer
                 if i == 3:
@@ -492,7 +493,7 @@ def get_latest_quotes(product_category, product_name):
                 elif i == 4:
                     customer_col = f'End Customers {i}'  # Note: "Customers" (plural) for column 4
                 else:
-                    customer_col = f'End Customer {i}'   # Note: "Customer" (singular) for columns 1 & 2
+                    customer_col = f'End Customer {i}'   # Note: "Customer" (singular) for columns 1 & 2, 5-8
                 
                 # Check if the customer column exists in the dataframe, if not try the other variant
                 if customer_col not in row:
@@ -502,13 +503,19 @@ def get_latest_quotes(product_category, product_name):
                     else:
                         customer_col = f'End Customers {i}'  # Try plural
                 
-                if (dc_col in row and customer_col in row and date_col in row and 
+                if (dc_col in row and customer_col in row and date_col in row and distributor_col in row and
                     pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
+                    
+                    # Get distributor value, default to 'N/A' if empty
+                    distributor_value = row.get(distributor_col, 'N/A')
+                    if pd.isna(distributor_value) or str(distributor_value).strip() == '':
+                        distributor_value = 'N/A'
                     
                     quotes.append({
                         'Currency': 'USD',
                         'Price': row[dc_col],
                         'Customer': row[customer_col],
+                        'Distributor': distributor_value,  # NEW: Individual distributor
                         'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
                         'Raw_Date': row[date_col],
                         'DC_Column': dc_col
@@ -522,9 +529,10 @@ def get_latest_quotes(product_category, product_name):
         ]
         
         for _, row in rmb_quotes.iterrows():
-            for i in range(1, 9):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-8
                 dc_col = f'DC-{i}'
                 date_col = f'Quote Date {i}'
+                distributor_col = f'Distributor-{i}'  # NEW: Individual distributor
                 
                 # Handle the inconsistent column naming for End Customer
                 if i == 3:
@@ -532,7 +540,7 @@ def get_latest_quotes(product_category, product_name):
                 elif i == 4:
                     customer_col = f'End Customers {i}'  # Note: "Customers" (plural) for column 4
                 else:
-                    customer_col = f'End Customer {i}'   # Note: "Customer" (singular) for columns 1 & 2
+                    customer_col = f'End Customer {i}'   # Note: "Customer" (singular) for columns 1 & 2, 5-8
                 
                 # Check if the customer column exists in the dataframe, if not try the other variant
                 if customer_col not in row:
@@ -542,13 +550,19 @@ def get_latest_quotes(product_category, product_name):
                     else:
                         customer_col = f'End Customers {i}'  # Try plural
                 
-                if (dc_col in row and customer_col in row and date_col in row and 
+                if (dc_col in row and customer_col in row and date_col in row and distributor_col in row and
                     pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
+                    
+                    # Get distributor value, default to 'N/A' if empty
+                    distributor_value = row.get(distributor_col, 'N/A')
+                    if pd.isna(distributor_value) or str(distributor_value).strip() == '':
+                        distributor_value = 'N/A'
                     
                     quotes.append({
                         'Currency': 'RMB',
                         'Price': row[dc_col],
                         'Customer': row[customer_col],
+                        'Distributor': distributor_value,  # NEW: Individual distributor
                         'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
                         'Raw_Date': row[date_col],
                         'DC_Column': dc_col
@@ -640,9 +654,10 @@ def display_dashboard():
     # Process USD quotes
     if quote_usd_data is not None and not quote_usd_data.empty:
         for _, row in quote_usd_data.iterrows():
-            for i in range(1, 9):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-8
                 dc_col = f'DC-{i}'
                 date_col = f'Quote Date {i}'
+                distributor_col = f'Distributor-{i}'  # NEW: Individual distributor
                 
                 # Handle the inconsistent column naming for End Customer
                 if i == 3:
@@ -650,7 +665,7 @@ def display_dashboard():
                 elif i == 4:
                     customer_col = f'End Customers {i}'  # Note: "Customers" (plural) for column 4
                 else:
-                    customer_col = f'End Customer {i}'   # Note: "Customer" (singular) for columns 1 & 2
+                    customer_col = f'End Customer {i}'   # Note: "Customer" (singular) for columns 1 & 2, 5-8
                 
                 # Check if the customer column exists in the dataframe, if not try the other variant
                 if customer_col not in row:
@@ -660,8 +675,13 @@ def display_dashboard():
                     else:
                         customer_col = f'End Customers {i}'  # Try plural
                 
-                if (dc_col in row and customer_col in row and date_col in row and 
+                if (dc_col in row and customer_col in row and date_col in row and distributor_col in row and
                     pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
+                    
+                    # Get distributor value, default to 'N/A' if empty
+                    distributor_value = row.get(distributor_col, 'N/A')
+                    if pd.isna(distributor_value) or str(distributor_value).strip() == '':
+                        distributor_value = 'N/A'
                     
                     all_quotes.append({
                         'Product_Category': row.get('Products', 'N/A'),
@@ -670,15 +690,16 @@ def display_dashboard():
                         'Price': row[dc_col],
                         'Customer': row[customer_col],
                         'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
-                        'Distributor': row.get('Distributor', 'N/A')
+                        'Distributor': distributor_value  # NEW: Individual distributor per quote
                     })
-    
+
     # Process RMB quotes
     if quote_rmb_data is not None and not quote_rmb_data.empty:
         for _, row in quote_rmb_data.iterrows():
-            for i in range(1, 9):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-8
                 dc_col = f'DC-{i}'
                 date_col = f'Quote Date {i}'
+                distributor_col = f'Distributor-{i}'  # NEW: Individual distributor
                 
                 # Handle the inconsistent column naming for End Customer
                 if i == 3:
@@ -686,7 +707,7 @@ def display_dashboard():
                 elif i == 4:
                     customer_col = f'End Customers {i}'  # Note: "Customers" (plural) for column 4
                 else:
-                    customer_col = f'End Customer {i}'   # Note: "Customer" (singular) for columns 1 & 2
+                    customer_col = f'End Customer {i}'   # Note: "Customer" (singular) for columns 1 & 2, 5-8
                 
                 # Check if the customer column exists in the dataframe, if not try the other variant
                 if customer_col not in row:
@@ -696,8 +717,13 @@ def display_dashboard():
                     else:
                         customer_col = f'End Customers {i}'  # Try plural
                 
-                if (dc_col in row and customer_col in row and date_col in row and 
+                if (dc_col in row and customer_col in row and date_col in row and distributor_col in row and
                     pd.notna(row[dc_col]) and pd.notna(row[customer_col]) and pd.notna(row[date_col])):
+                    
+                    # Get distributor value, default to 'N/A' if empty
+                    distributor_value = row.get(distributor_col, 'N/A')
+                    if pd.isna(distributor_value) or str(distributor_value).strip() == '':
+                        distributor_value = 'N/A'
                     
                     all_quotes.append({
                         'Product_Category': row.get('Products', 'N/A'),
@@ -706,7 +732,7 @@ def display_dashboard():
                         'Price': row[dc_col],
                         'Customer': row[customer_col],
                         'Quote_Date': pd.to_datetime(row[date_col], errors='coerce'),
-                        'Distributor': row.get('Distributor', 'N/A')
+                        'Distributor': distributor_value  # NEW: Individual distributor per quote
                     })
     
     if all_quotes:
@@ -854,23 +880,25 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
         
         if matching_row is not None:
             # Update existing row - find next available DC column
-            for i in range(1, 9):  # DC-1 to DC-4
+            for i in range(1, 9):  # DC-1 to DC-8
                 dc_col = f'DC-{i}'
                 if pd.isna(matching_row.get(dc_col)) or matching_row.get(dc_col) == '':
-                    # Found empty slot, update this column and corresponding date/customer
+                    # Found empty slot, update this column and corresponding date/customer/distributor
                     col_index_dc = list(existing_df.columns).index(dc_col) + 1  # +1 for gspread indexing
                     
-                    # Find corresponding date and customer columns
+                    # Find corresponding date, customer, and distributor columns
                     date_col = f'Quote Date {i}'
+                    distributor_col = f'Distributor-{i}'
                     if i == 3:
                         customer_col = f'End Customers {i}'  # Note: plural for column 3
                     elif i == 4:
                         customer_col = f'End Customers {i}'  # Note: plural for column 4  
                     else:
-                        customer_col = f'End Customer {i}'   # Note: singular for columns 1 & 2
+                        customer_col = f'End Customer {i}'   # Note: singular for columns 1 & 2, 5-8
                     
                     try:
                         col_index_date = list(existing_df.columns).index(date_col) + 1
+                        col_index_distributor = list(existing_df.columns).index(distributor_col) + 1
                         col_index_customer = list(existing_df.columns).index(customer_col) + 1
                     except ValueError:
                         # If column doesn't exist, try alternative naming
@@ -884,6 +912,7 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
                     worksheet.update_cell(row_index + 2, col_index_dc, formatted_price)  # Use formatted price
                     worksheet.update_cell(row_index + 2, col_index_date, quote_date)
                     worksheet.update_cell(row_index + 2, col_index_customer, customer)
+                    worksheet.update_cell(row_index + 2, col_index_distributor, distributor)  # NEW: Update distributor
                     
                     return True, f"Quote added to existing product record in {dc_col}"
             
@@ -891,22 +920,18 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
         
         else:
             # Create new row
-            # Get headers from existing sheet to maintain structure
-            if not existing_df.empty:
-                headers = list(existing_df.columns)
-            else:
-                # Default headers structure for quote sheets
-                headers = [
-                    'Products', 'Product Name', 'Distributor',
-                    'DC-1', 'Quote Date 1', 'End Customer 1',
-                    'DC-2', 'Quote Date 2', 'End Customer 2', 
-                    'DC-3', 'Quote Date 3', 'End Customers 3',
-                    'DC-4', 'Quote Date 4', 'End Customers 4',
-                    'DC-5', 'Quote Date 5', 'End Customers 5',
-                    'DC-6', 'Quote Date 6', 'End Customers 6',
-                    'DC-7', 'Quote Date 7', 'End Customers 7',
-                    'DC-8', 'Quote Date 8', 'End Customers 8',
-                ]
+            # Updated headers structure for new quote sheets with individual distributors
+            headers = [
+                'Products', 'Product Name', 'Distributor-1',
+                'DC-1', 'End Customer 1', 'Quote Date 1',
+                'Distributor-2', 'DC-2', 'End Customer 2', 'Quote Date 2',
+                'Distributor-3', 'DC-3', 'End Customers 3', 'Quote Date 3',
+                'Distributor-4', 'DC-4', 'End Customers 4', 'Quote Date 4',
+                'Distributor-5', 'DC-5', 'End Customers 5', 'Quote Date 5',
+                'Distributor-6', 'DC-6', 'End Customers 6', 'Quote Date 6',
+                'Distributor-7', 'DC-7', 'End Customers 7', 'Quote Date 7',
+                'Distributor-8', 'DC-8', 'End Customers 8', 'Quote Date 8',
+            ]
             
             # Create new row data
             new_row_data = [''] * len(headers)
@@ -916,16 +941,16 @@ def add_quote_to_sheet(currency, product_category, product_name, price, customer
                 new_row_data[headers.index('Products')] = product_category
             if 'Product Name' in headers:
                 new_row_data[headers.index('Product Name')] = product_name
-            if 'Distributor' in headers:
-                new_row_data[headers.index('Distributor')] = distributor
             
-            # Add the quote in DC-1 with formatted price
+            # Add the quote in DC-1 with formatted price and distributor
             if 'DC-1' in headers:
                 new_row_data[headers.index('DC-1')] = formatted_price  # Use formatted price
             if 'Quote Date 1' in headers:
                 new_row_data[headers.index('Quote Date 1')] = quote_date
             if 'End Customer 1' in headers:
                 new_row_data[headers.index('End Customer 1')] = customer
+            if 'Distributor-1' in headers:
+                new_row_data[headers.index('Distributor-1')] = distributor  # NEW: Add distributor
             
             worksheet.append_row(new_row_data)
             return True, "New product quote record created"
@@ -985,7 +1010,7 @@ def get_latest_quotes_with_distributor(category, product_name):
         return []
 
 def extract_quotes_from_sheet(df, category, product_name, currency):
-    """Extract quotes from a specific sheet with distributor information"""
+    """Extract quotes from a specific sheet with individual distributor information per quote"""
     quotes = []
     
     try:
@@ -1005,17 +1030,11 @@ def extract_quotes_from_sheet(df, category, product_name, currency):
             return quotes
         
         for _, row in matching_rows.iterrows():
-            # Get distributor from Column C
-            distributor_value = row.get('Distributor', '')
-            if pd.isna(distributor_value) or distributor_value == '':
-                distributor = 'N/A'
-            else:
-                distributor = str(distributor_value).strip()
-            
             # Extract quotes from DC-1 through DC-8 columns
             for i in range(1, 9):
                 dc_col = f'DC-{i}'
                 date_col = f'Quote Date {i}'
+                distributor_col = f'Distributor-{i}'  # NEW: Individual distributor per quote
                 
                 # Handle customer column naming variations
                 if i in [3, 4]:
@@ -1028,25 +1047,33 @@ def extract_quotes_from_sheet(df, category, product_name, currency):
                         customer_col = f'End Customers {i}'  # Try plural
                 
                 # Skip if columns don't exist
-                if dc_col not in df.columns or date_col not in df.columns or customer_col not in df.columns:
+                if (dc_col not in df.columns or date_col not in df.columns or 
+                    customer_col not in df.columns or distributor_col not in df.columns):
                     continue
                 
                 # Get values
                 price_value = row.get(dc_col, '')
                 date_value = row.get(date_col, '')
                 customer_value = row.get(customer_col, '')
+                distributor_value = row.get(distributor_col, '')  # NEW: Get individual distributor
                 
                 # Check if all required values exist and are not empty
                 price_valid = not pd.isna(price_value) and str(price_value).strip() != ''
                 date_valid = not pd.isna(date_value) and str(date_value).strip() != ''
                 customer_valid = not pd.isna(customer_value) and str(customer_value).strip() != ''
                 
+                # Distributor can be empty/N/A
+                if pd.isna(distributor_value) or str(distributor_value).strip() == '':
+                    distributor_display = 'N/A'
+                else:
+                    distributor_display = str(distributor_value).strip()
+                
                 if price_valid and date_valid and customer_valid:
                     quotes.append({
                         'Price': str(price_value).strip(),
                         'Currency': currency,
                         'Customer': str(customer_value).strip(),
-                        'Distributor': distributor,
+                        'Distributor': distributor_display,  # NEW: Individual distributor
                         'Raw_Date': str(date_value).strip(),
                         'Quote_Column': dc_col
                     })
@@ -1488,3 +1515,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
