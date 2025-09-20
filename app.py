@@ -1251,7 +1251,7 @@ def display_price_lookup():
         if 'Magnias P/N' in df.columns:
             display_columns.append('Magnias P/N')
         display_columns.extend(['Parts RMB Price', 'Parts USD Price', 'Quote Date'])
-    elif category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PowerSwitch", "Misc", "SDOthers"]:
+    elif category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PowerSwitch", "Misc", "SDOthers", "TVS"]:
         display_columns = ['Quote Date', 'Magnias P/N', 'Parts RMB Price', 'Parts USD Price']
     else:
         display_columns = ['Product Name' if 'Product Name' in df.columns else 'Product',  
@@ -1515,4 +1515,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
