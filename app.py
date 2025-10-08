@@ -74,7 +74,7 @@ def login_page():
         with st.form("login_form"):
             username = st.text_input("Username", placeholder="Enter username")
             password = st.text_input("Password", type="password", placeholder="Enter password")
-            login_button = st.form_submit_button("🔑 Login", type="primary", use_container_width=True)
+            login_button = st.form_submit_button("🔑 Login", type="primary", width='stretch')
             
             if login_button:
                 if username and password:
@@ -770,7 +770,7 @@ def display_dashboard():
                     names=category_counts.index,
                     title="Quotes Distribution by Product Category"
                 )
-                st.plotly_chart(fig_category, use_container_width=True)
+                st.plotly_chart(fig_category, width='stretch')
         
         with col2:
             # Quotes by Currency
@@ -782,7 +782,7 @@ def display_dashboard():
                     title="Quotes by Currency",
                     labels={'x': 'Currency', 'y': 'Number of Quotes'}
                 )
-                st.plotly_chart(fig_currency, use_container_width=True)
+                st.plotly_chart(fig_currency, width='stretch')
         
         # Recent Quotes Activity
         st.subheader("📈 Recent Quotes Activity")
@@ -805,7 +805,7 @@ def display_dashboard():
                 title="Monthly Quotes Activity (Last 6 Months)",
                 markers=True
             )
-            st.plotly_chart(fig_timeline, use_container_width=True)
+            st.plotly_chart(fig_timeline, width='stretch')
         
         # Top Customers
         st.subheader("🏆 Top Customers by Quote Volume")
@@ -821,7 +821,7 @@ def display_dashboard():
                 title="Top 10 Customers",
                 labels={'x': 'Number of Quotes', 'y': 'Customer'}
             )
-            st.plotly_chart(fig_customers, use_container_width=True)
+            st.plotly_chart(fig_customers, width='stretch')
         
         with col2:
             # Recent Quotes Table
@@ -829,7 +829,7 @@ def display_dashboard():
             recent_quotes_display = quotes_df.sort_values('Quote_Date', ascending=False).head(10)
             display_quotes = recent_quotes_display[['Product_Category', 'Product_Name', 'Currency', 'Price', 'Customer', 'Quote_Date']].copy()
             display_quotes['Quote_Date'] = display_quotes['Quote_Date'].dt.strftime('%Y-%m-%d')
-            st.dataframe(display_quotes, use_container_width=True, hide_index=True)
+            st.dataframe(display_quotes, width='stretch', hide_index=True)
     
     else:
         st.info("No quotes data available for analysis")
@@ -1269,7 +1269,7 @@ def display_price_lookup():
     if 'Parts USD Price' in display_df.columns:
         display_df['Parts USD Price'] = display_df['Parts USD Price'].apply(lambda x: format_price_display(x, "USD"))
     
-    st.dataframe(display_df, use_container_width=True)
+    st.dataframe(display_df, width='stretch')
     
     # Enhanced Latest Quotes and Quote Management section - only show if there's a search term and not "All Products"
     if search_term and category != "All Products":
@@ -1312,7 +1312,7 @@ def display_price_lookup():
                     })
                 
                 quote_df = pd.DataFrame(quote_data)
-                st.dataframe(quote_df, use_container_width=True)
+                st.dataframe(quote_df, width='stretch')
             else:
                 st.info(f"No quotes found for {category} - {product_name_for_quotes}")
         
@@ -1400,7 +1400,7 @@ def authenticated_main():
             st.info(f"👤 Logged in as: {st.session_state.username}")
         
         # Add logout button at the top
-        if st.button("🚪 Logout", type="secondary", use_container_width=True):
+        if st.button("🚪 Logout", type="secondary", width='stretch'):
             logout()
         
         st.markdown("---")
@@ -1515,5 +1515,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
