@@ -575,7 +575,7 @@ def get_latest_quotes(product_category, product_name):
 
 def display_dashboard():
     """Display main dashboard with key metrics"""
-    st.title("💾 Quotation Management System")
+    st.title("Quotation Management System")
     st.markdown("---")
     
     # Get cached data
@@ -592,61 +592,58 @@ def display_dashboard():
     quote_usd_data = get_cached_data("QuoteUSD")
     quote_rmb_data = get_cached_data("QuoteRMB")
 
-    # Dashboard metrics - First Row
-    col1, col2, col3, col4 = st.columns(4)
+    # Calculate all counts first
+    esd_count = len(esd_data) if esd_data is not None else 0
+    cmf_count = len(cmf_data) if cmf_data is not None else 0
+    transistor_count = len(transistor_data) if transistor_data is not None else 0
+    mos_count = len(mos_data) if mos_data is not None else 0
+    sky_count = len(sky_data) if sky_data is not None else 0
+    zener_count = len(zener_data) if zener_data is not None else 0
+    PowerSwitch_count = len(PowerSwitch_data) if PowerSwitch_data is not None else 0
+    Misc_count = len(Misc_data) if Misc_data is not None else 0
+    SDOthers_count = len(SDOthers_data) if SDOthers_data is not None else 0
+    tvs_count = len(tvs_data) if tvs_data is not None else 0
+    total_count = esd_count + cmf_count + transistor_count + mos_count + sky_count + zener_count + PowerSwitch_count + tvs_count + Misc_count + SDOthers_count
 
+    # Product Metrics Section
+    st.subheader("Product Inventory")
+    
+    # Dashboard metrics - First Row (5 columns)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
     with col1:
-        esd_count = len(esd_data) if esd_data is not None else 0
         st.metric("ESD Products", esd_count)
-    
     with col2:
-        cmf_count = len(cmf_data) if cmf_data is not None else 0
         st.metric("CMF Products", cmf_count)
-    
     with col3:
-        transistor_count = len(transistor_data) if transistor_data is not None else 0
         st.metric("Transistor Products", transistor_count)
-    
     with col4:
-        mos_count = len(mos_data) if mos_data is not None else 0
         st.metric("MOS Products", mos_count)
-
-    # Dashboard metrics - Second Row
-    col5, col6, col7, col8, col9 = st.columns(5)
-
     with col5:
-        sky_count = len(sky_data) if sky_data is not None else 0
         st.metric("SKY Products", sky_count)
 
+    # Dashboard metrics - Second Row (5 columns)
+    col6, col7, col8, col9, col10 = st.columns(5)
+    
     with col6:
-        zener_count = len(zener_data) if zener_data is not None else 0
         st.metric("Zener Products", zener_count)
-
     with col7:
-        PowerSwitch_count = len(PowerSwitch_data) if PowerSwitch_data is not None else 0
         st.metric("PowerSwitch Products", PowerSwitch_count)
-
     with col8:
-        tvs_count = len(tvs_data) if tvs_data is not None else 0
         st.metric("TVS Products", tvs_count)
-
-    col9, col10, col11= st.columns(3)
-
     with col9:
-        Misc_count = len(Misc_data) if Misc_data is not None else 0
         st.metric("Misc Products", Misc_count)
-
     with col10:
-        SDOthers_count = len(SDOthers_data) if tvs_data is not None else 0
         st.metric("SDOthers Products", SDOthers_count)
-
-    with col11:
-        total_count = esd_count + cmf_count + transistor_count + mos_count + sky_count + zener_count + PowerSwitch_count + tvs_count + Misc_count + SDOthers_count
+    
+    # Dashboard metrics - Third Row (Total - centered)
+    col11, col12, col13 = st.columns([2, 1, 2])
+    with col12:
         st.metric("Total Products", total_count)
     
     # Quotes Analysis Section
     st.markdown("---")
-    st.subheader("💰 Quotes Analysis")
+    st.subheader("Quotes Analysis")
     
     # Process quotes data for analysis
     all_quotes = []
@@ -785,7 +782,7 @@ def display_dashboard():
                 st.plotly_chart(fig_currency, width='stretch')
         
         # Recent Quotes Activity
-        st.subheader("📈 Recent Quotes Activity")
+        st.subheader("Recent Quotes Activity")
         
         # Filter last 6 months for better visualization
         six_months_ago = pd.Timestamp.now() - pd.DateOffset(months=6)
@@ -808,7 +805,7 @@ def display_dashboard():
             st.plotly_chart(fig_timeline, width='stretch')
         
         # Top Customers
-        st.subheader("🏆 Top Customers by Quote Volume")
+        st.subheader("Top Customers by Quote Volume")
         top_customers = quotes_df['Customer'].value_counts().head(10)
         
         col1, col2 = st.columns([1, 1])
@@ -1085,7 +1082,7 @@ def extract_quotes_from_sheet(df, category, product_name, currency):
         return quotes
 
 def format_price_display(price_value, currency="USD"):
-    """Format price for display with currency symbol and exactly 4 decimal places"""
+    """Format price for display with currency symbol and exactly 5 decimal places"""
     if pd.isna(price_value) or price_value == '' or price_value is None:
         return ''
     
@@ -1097,14 +1094,14 @@ def format_price_display(price_value, currency="USD"):
         else:
             numeric_value = float(price_value)
         
-        # Force to exactly 4 decimal places
-        numeric_value = round(numeric_value, 4)
+        # Force to exactly 5 decimal places
+        numeric_value = round(numeric_value, 5)
         
-        # Format with appropriate currency symbol and exactly 4 decimal places
+        # Format with appropriate currency symbol and exactly 5 decimal places
         if currency == "USD":
-            return f"${numeric_value:.4f}"
+            return f"${numeric_value:.5f}"
         else:  # RMB
-            return f"¥{numeric_value:.4f}"
+            return f"¥{numeric_value:.5f}"
             
     except (ValueError, TypeError):
         return str(price_value)  # Return original if conversion fails
@@ -1299,7 +1296,7 @@ def display_price_lookup():
                 # Display quotes in a table format with formatted prices and distributor column
                 quote_data = []
                 for i, quote in enumerate(quotes, 1):
-                    # Format the price based on currency with exactly 4 decimal places
+                    # Format the price based on currency with exactly 5 decimal places
                     formatted_quote_price = format_price_display(quote['Price'], quote['Currency'])
                     
                     quote_data.append({
