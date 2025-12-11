@@ -323,36 +323,85 @@ def authenticate_user(username, password):
     except Exception as e:
         st.error(f"Authentication error: {str(e)}")
         return False
-
+        
 def login_page():
-    """Display login page"""
-    st.title("🔐 Login")
-    st.markdown("---")
+    """Display professional login page"""
     
-    # Center the login form
+    # Additional login styling
+    st.markdown("""
+    <style>
+    .login-container {
+        max-width: 450px;
+        margin: 5rem auto;
+        padding: 3rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    
+    .login-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+    
+    .login-title {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .login-subtitle {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+        margin-bottom: 2rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.subheader("Please enter your credentials")
+        st.markdown("""
+        <div class="login-icon">💼</div>
+        <div class="login-title">Quotation CRM</div>
+        <div class="login-subtitle">Sign in to access your account</div>
+        """, unsafe_allow_html=True)
         
-        # Login form
         with st.form("login_form"):
-            username = st.text_input("Username", placeholder="Enter username")
-            password = st.text_input("Password", type="password", placeholder="Enter password")
-            login_button = st.form_submit_button("🔑 Login", type="primary", width='stretch')
+            username = st.text_input("Username", placeholder="Enter your username")
+            password = st.text_input("Password", type="password", placeholder="Enter your password")
+            
+            col_a, col_b = st.columns([1, 1])
+            with col_a:
+                login_button = st.form_submit_button("🔐 Sign In", type="primary", use_container_width=True)
+            with col_b:
+                help_button = st.form_submit_button("Need Help?", type="secondary", use_container_width=True)
             
             if login_button:
                 if username and password:
                     if authenticate_user(username, password):
                         st.session_state.authenticated = True
-                        st.success("✅ Login successful! Redirecting...")
+                        st.success("✓ Login successful! Redirecting...")
                         st.rerun()
                     else:
-                        st.error("❌ Invalid username or password")
+                        st.error("✗ Invalid username or password")
                 else:
-                    st.warning("⚠️ Please enter both username and password")
-        
-
+                    st.warning("⚠ Please enter both username and password")
+            
+            if help_button:
+                st.info("📧 Contact your system administrator for assistance")
 
 def logout():
     """Logout function"""
