@@ -337,20 +337,14 @@ def login_page():
         background: var(--bg-secondary);
         border: 1px solid var(--border);
         border-radius: 12px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.08);
     }
     
-    .login-icon {
-        width: 64px;
-        height: 64px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .login-logo {
+        width: 120px;
+        height: auto;
+        display: block;
         margin: 0 auto 1.5rem;
-        font-size: 2rem;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
     }
     
     .login-title {
@@ -374,20 +368,16 @@ def login_page():
     
     with col2:
         st.markdown("""
-        <div class="login-icon">💼</div>
-        <div class="login-title">Quotation CRM</div>
-        <div class="login-subtitle">Sign in to access your account</div>
+        <img src="https://i.postimg.cc/j5G8ytbC/cropped-logo.png" class="login-logo" alt="Logo">
+        <div class="login-title">Quotation System</div>
         """, unsafe_allow_html=True)
         
         with st.form("login_form"):
             username = st.text_input("Username", placeholder="Enter your username")
             password = st.text_input("Password", type="password", placeholder="Enter your password")
             
-            col_a, col_b = st.columns([1, 1])
-            with col_a:
-                login_button = st.form_submit_button("🔐 Sign In", type="primary", use_container_width=True)
-            with col_b:
-                help_button = st.form_submit_button("Need Help?", type="secondary", use_container_width=True)
+
+            login_button = st.form_submit_button("🔐 Sign In", type="primary", use_container_width=True)
             
             if login_button:
                 if username and password:
@@ -400,8 +390,6 @@ def login_page():
                 else:
                     st.warning("⚠ Please enter both username and password")
             
-            if help_button:
-                st.info("📧 Contact your system administrator for assistance")
 
 def logout():
     """Logout function"""
