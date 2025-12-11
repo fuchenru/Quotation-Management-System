@@ -1638,7 +1638,7 @@ def display_product_details():
         return
     
     # Product selection
-    if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PowerSwitch", "Misc", "SDOthers"]:
+    if category in ["MOS", "CMF", "Transistor", "SKY", "Zener", "PowerSwitch", "Misc", "SDOthers","TVS"]:
         product_col = 'Magnias P/N'
         products = sorted(df[product_col].dropna().unique())
         selected_product = st.selectbox("Select Magnias P/N:", products, key="details_product")
