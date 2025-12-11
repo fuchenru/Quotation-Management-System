@@ -11,8 +11,272 @@ from plotly.subplots import make_subplots
 st.set_page_config(
     page_title="Quotation System",
     page_icon="💾",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
+
+def inject_custom_css():
+    """Inject professional CRM/SaaS styling"""
+    st.markdown("""
+    <style>
+    /* Import Professional Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    /* ═══ COLOR SYSTEM ═══ */
+    :root {
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --secondary: #64748b;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --border: #334155;
+    }
+    
+    /* ═══ GLOBAL STYLES ═══ */
+    .stApp {
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+        color: var(--text-primary);
+    }
+    
+    #MainMenu, footer, header {visibility: hidden;}
+    
+    /* ═══ TYPOGRAPHY ═══ */
+    h1 {
+        font-size: 2.25rem !important;
+        font-weight: 700 !important;
+        color: var(--text-primary) !important;
+        letter-spacing: -0.025em !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    h2 {
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        color: var(--text-primary) !important;
+        margin: 2rem 0 1rem !important;
+    }
+    
+    h3 {
+        font-size: 1.125rem !important;
+        font-weight: 600 !important;
+        color: var(--text-secondary) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        font-size: 0.875rem !important;
+        margin: 1.5rem 0 1rem !important;
+        padding-bottom: 0.5rem !important;
+        border-bottom: 1px solid var(--border) !important;
+    }
+    
+    /* ═══ SIDEBAR ═══ */
+    [data-testid="stSidebar"] {
+        background: var(--bg-secondary) !important;
+        border-right: 1px solid var(--border) !important;
+    }
+    
+    [data-testid="stSidebar"] .stButton > button {
+        width: 100%;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.625rem 1rem;
+        font-weight: 500;
+        transition: all 0.15s ease;
+    }
+    
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        transform: translateY(-1px);
+    }
+    
+    /* ═══ METRIC CARDS ═══ */
+    [data-testid="stMetric"] {
+        background: var(--bg-secondary);
+        padding: 1.25rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        transition: all 0.2s ease;
+    }
+    
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        border-color: var(--primary);
+    }
+    
+    [data-testid="stMetricValue"] {
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        color: var(--text-primary) !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: var(--text-secondary) !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+    }
+    
+    /* ═══ INPUTS ═══ */
+    .stTextInput > div > div > input,
+    .stNumberInput > div > div > input,
+    .stTextArea textarea,
+    .stDateInput > div > div > input,
+    .stSelectbox > div > div {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 6px !important;
+        transition: all 0.15s ease !important;
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stNumberInput > div > div > input:focus,
+    .stTextArea textarea:focus,
+    .stDateInput > div > div > input:focus,
+    .stSelectbox > div > div:focus {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    }
+    
+    /* ═══ BUTTONS ═══ */
+    .stButton > button {
+        background: var(--primary) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 0.625rem 1.25rem !important;
+        font-weight: 600 !important;
+        transition: all 0.15s ease !important;
+    }
+    
+    .stButton > button:hover {
+        background: var(--primary-hover) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+    }
+    
+    /* ═══ DATA TABLES ═══ */
+    [data-testid="stDataFrame"] {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+    }
+    
+    [data-testid="stDataFrame"] thead tr th {
+        background: var(--bg-tertiary) !important;
+        color: var(--text-secondary) !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        font-size: 0.75rem !important;
+        letter-spacing: 0.05em !important;
+    }
+    
+    [data-testid="stDataFrame"] tbody tr:hover {
+        background: rgba(37, 99, 235, 0.05) !important;
+    }
+    
+    /* ═══ FORMS ═══ */
+    [data-testid="stForm"] {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+        padding: 1.5rem !important;
+    }
+    
+    /* ═══ ALERTS ═══ */
+    .stSuccess {
+        background: rgba(16, 185, 129, 0.1) !important;
+        border-left: 4px solid var(--success) !important;
+        color: var(--success) !important;
+        border-radius: 6px !important;
+    }
+    
+    .stError {
+        background: rgba(239, 68, 68, 0.1) !important;
+        border-left: 4px solid var(--danger) !important;
+        color: var(--danger) !important;
+        border-radius: 6px !important;
+    }
+    
+    .stWarning {
+        background: rgba(245, 158, 11, 0.1) !important;
+        border-left: 4px solid var(--warning) !important;
+        color: var(--warning) !important;
+        border-radius: 6px !important;
+    }
+    
+    .stInfo {
+        background: rgba(37, 99, 235, 0.1) !important;
+        border-left: 4px solid var(--primary) !important;
+        color: var(--text-secondary) !important;
+        border-radius: 6px !important;
+    }
+    
+    /* ═══ RADIO BUTTONS ═══ */
+    .stRadio label {
+        background: var(--bg-secondary) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 6px !important;
+        padding: 0.625rem 1rem !important;
+        transition: all 0.15s ease !important;
+    }
+    
+    .stRadio label:hover {
+        background: var(--bg-tertiary) !important;
+        border-color: var(--primary) !important;
+    }
+    
+    /* ═══ SCROLLBAR ═══ */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--secondary);
+    }
+    
+    /* ═══ ANIMATIONS ═══ */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .block-container > div {
+        animation: fadeIn 0.3s ease-out;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+inject_custom_css()
 
 # Initialize session state for authentication and data storage
 if 'authenticated' not in st.session_state:
