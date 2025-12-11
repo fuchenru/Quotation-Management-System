@@ -367,11 +367,7 @@ def login_page():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown("""
-        <img src="https://i.postimg.cc/j5G8ytbC/cropped-logo.png" class="login-logo" alt="Logo">
-        <div class="login-title">Quotation System</div>
-        """, unsafe_allow_html=True)
-        
+
         with st.form("login_form"):
             username = st.text_input("Username", placeholder="Enter your username")
             password = st.text_input("Password", type="password", placeholder="Enter your password")
