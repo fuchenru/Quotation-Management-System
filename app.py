@@ -16,7 +16,7 @@ st.set_page_config(
 )
 
 def inject_custom_css():
-    """Inject professional CRM/SaaS styling"""
+    """Inject professional CRM/SaaS styling with light theme"""
     st.markdown("""
     <style>
     /* Import Professional Fonts */
@@ -30,18 +30,18 @@ def inject_custom_css():
         --success: #10b981;
         --warning: #f59e0b;
         --danger: #ef4444;
-        --bg-primary: #0f172a;
-        --bg-secondary: #1e293b;
-        --bg-tertiary: #334155;
-        --text-primary: #f8fafc;
-        --text-secondary: #cbd5e1;
-        --text-muted: #94a3b8;
-        --border: #334155;
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --bg-tertiary: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
     }
     
     /* ═══ GLOBAL STYLES ═══ */
     .stApp {
-        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        background: var(--bg-primary);
         font-family: 'IBM Plex Sans', -apple-system, sans-serif;
         color: var(--text-primary);
     }
@@ -84,7 +84,7 @@ def inject_custom_css():
     
     [data-testid="stSidebar"] .stButton > button {
         width: 100%;
-        background: var(--bg-tertiary);
+        background: var(--bg-primary);
         color: var(--text-primary);
         border: 1px solid var(--border);
         border-radius: 6px;
@@ -95,6 +95,7 @@ def inject_custom_css():
     
     [data-testid="stSidebar"] .stButton > button:hover {
         background: var(--primary);
+        color: white;
         border-color: var(--primary);
         transform: translateY(-1px);
     }
@@ -110,7 +111,7 @@ def inject_custom_css():
     
     [data-testid="stMetric"]:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
         border-color: var(--primary);
     }
     
@@ -135,7 +136,7 @@ def inject_custom_css():
     .stTextArea textarea,
     .stDateInput > div > div > input,
     .stSelectbox > div > div {
-        background: var(--bg-secondary) !important;
+        background: var(--bg-primary) !important;
         color: var(--text-primary) !important;
         border: 1px solid var(--border) !important;
         border-radius: 6px !important;
@@ -170,14 +171,14 @@ def inject_custom_css():
     
     /* ═══ DATA TABLES ═══ */
     [data-testid="stDataFrame"] {
-        background: var(--bg-secondary) !important;
+        background: var(--bg-primary) !important;
         border: 1px solid var(--border) !important;
         border-radius: 8px !important;
     }
     
     [data-testid="stDataFrame"] thead tr th {
         background: var(--bg-tertiary) !important;
-        color: var(--text-secondary) !important;
+        color: var(--text-primary) !important;
         font-weight: 600 !important;
         text-transform: uppercase !important;
         font-size: 0.75rem !important;
@@ -200,21 +201,21 @@ def inject_custom_css():
     .stSuccess {
         background: rgba(16, 185, 129, 0.1) !important;
         border-left: 4px solid var(--success) !important;
-        color: var(--success) !important;
+        color: #047857 !important;
         border-radius: 6px !important;
     }
     
     .stError {
         background: rgba(239, 68, 68, 0.1) !important;
         border-left: 4px solid var(--danger) !important;
-        color: var(--danger) !important;
+        color: #b91c1c !important;
         border-radius: 6px !important;
     }
     
     .stWarning {
         background: rgba(245, 158, 11, 0.1) !important;
         border-left: 4px solid var(--warning) !important;
-        color: var(--warning) !important;
+        color: #c2410c !important;
         border-radius: 6px !important;
     }
     
@@ -227,7 +228,7 @@ def inject_custom_css():
     
     /* ═══ RADIO BUTTONS ═══ */
     .stRadio label {
-        background: var(--bg-secondary) !important;
+        background: var(--bg-primary) !important;
         border: 1px solid var(--border) !important;
         border-radius: 6px !important;
         padding: 0.625rem 1rem !important;
@@ -246,16 +247,16 @@ def inject_custom_css():
     }
     
     ::-webkit-scrollbar-track {
-        background: var(--bg-primary);
+        background: var(--bg-secondary);
     }
     
     ::-webkit-scrollbar-thumb {
-        background: var(--bg-tertiary);
+        background: var(--border);
         border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--secondary);
+        background: var(--text-muted);
     }
     
     /* ═══ ANIMATIONS ═══ */
